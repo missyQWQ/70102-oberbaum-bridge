@@ -1,9 +1,13 @@
 import argparse
+import asyncio
 import socket
 import threading
 import time
 from datetime import datetime
-
+from pager import *
+from data_processing import data_combination_dfAndDict
+from model_feature_construction import preprocess_features
+from run_model import run_model
 VERSION = "0.0.0"
 MLLP_BUFFER_SIZE = 1024
 MLLP_TIMEOUT_SECONDS = 10
@@ -21,31 +25,35 @@ discharged_patient = []
 creatine_results = {}
 
 
-def parse_hl7message(data):
-    for record in data:
-            further_record = record.split('\r')
-            if len(further_record) == 3:
-                if further_record[0].split('|')[8] == 'ADT^A01':
-                    pid_record = further_record[1].split('|')
-                    birthdate = datetime.strptime(pid_record[7], '%Y%m%d')
-                    current_date = datetime.now()
-                    age = (current_date.year - birthdate.year -
-                           ((current_date.month, current_date.day) < (birthdate.month, birthdate.day)))
-                    admitted_patient[pid_record[3]] = [age, pid_record[8].lower()]
-                else:
-                    pid_record = further_record[1].split('|')
-                    discharged_patient.append(pid_record[3])
-            else:
-                pid_record = further_record[1].split('|')
-                obr_record = further_record[2].split('|')
-                obx_record = further_record[3].split('|')
-                datetime_str = obr_record[-1]
-                formatted_datetime = datetime.strptime(datetime_str, '%Y%m%d%H%M%S').strftime('%Y-%m-%d %H:%M:%S')
-                creatine_results[int(pid_record[-1])] = [admitted_patient[pid_record[-1]][0], admitted_patient[pid_record[-1]][1],
-                                                    formatted_datetime, round(float(obx_record[-1]), 2)]
+def parse_hl7message(record):
+    further_record = record.split('\r')
+    if len(further_record) == 3:
+        if further_record[0].split('|')[8] == 'ADT^A01':
+            pid_record = further_record[1].split('|')
+            birthdate = datetime.strptime(pid_record[7], '%Y%m%d')
+            current_date = datetime.now()
+            age = (current_date.year - birthdate.year -
+                   ((current_date.month, current_date.day) < (birthdate.month, birthdate.day)))
+            admitted_patient[pid_record[3]] = [age, pid_record[8].lower()]
+        else:
+            pid_record = further_record[1].split('|')
+            discharged_patient.append(pid_record[3])
+        return None
+    else:
+        pid_record = further_record[1].split('|')
+        obr_record = further_record[2].split('|')
+        obx_record = further_record[3].split('|')
+        datetime_str = obr_record[-1]
+        formatted_datetime = datetime.strptime(datetime_str, '%Y%m%d%H%M%S').strftime('%Y-%m-%d %H:%M:%S')
+        creatine_results[int(pid_record[-1])] = [admitted_patient[pid_record[-1]][0],
+                                                 admitted_patient[pid_record[-1]][1],
+                                                 formatted_datetime, round(float(obx_record[-1]), 2)]
+
+        return [int(pid_record[-1]), admitted_patient[pid_record[-1]][0], admitted_patient[pid_record[-1]][1],
+                formatted_datetime, round(float(obx_record[-1]), 2)]
 
 
-def serve_mllp_dataloader(client, shutdown_mllp):
+def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, history):
     buffer = b""
     while not shutdown_mllp.is_set():
         try:
@@ -58,7 +66,14 @@ def serve_mllp_dataloader(client, shutdown_mllp):
                 received, buffer = parse_mllp_messages(buffer)
 
             msg = received[0].decode('ascii')
-            raw_data.append(msg)
+
+            result = parse_hl7message(msg)
+
+            if result is not None:
+                raw = data_combination_dfAndDict(history, result)
+                feature = preprocess_features(raw)
+                output = run_model(feature, clf_model, sex_encoder, aki_encoder)
+                asyncio.run(parse_patients(pager, output))
 
             mllp = bytes(chr(MLLP_START_OF_BLOCK), "ascii")
             mllp += ACK
@@ -72,19 +87,20 @@ def serve_mllp_dataloader(client, shutdown_mllp):
     client.close()
 
 
-def run_mllp_client(host, port, shutdown_mllp):
+def run_mllp_client(host, port, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, history):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        s.connect((host, port))
-        s.settimeout(SHUTDOWN_POLL_INTERVAL_SECONDS)
-        print(f"mllp: listening on {host}:{port}")
-        source = f"{host}:{port}"
-        print(f"mllp: {source}: make a connection")
-        serve_mllp_dataloader(s, shutdown_mllp)
-        parse_hl7message(raw_data)
-        print(creatine_results)
         while not shutdown_mllp.is_set():
-            continue
+            try:
+                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                s.connect((host, port))
+                s.settimeout(SHUTDOWN_POLL_INTERVAL_SECONDS)
+                print(f"mllp: listening on {host}:{port}")
+                source = f"{host}:{port}"
+                print(f"mllp: {source}: make a connection")
+                serve_mllp_dataloader(s, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, history)
+            except Exception as e:
+                time.sleep(5)
+                continue
 
         print("mllp: graceful shutdown")
 
@@ -117,11 +133,11 @@ def main():
     parser.add_argument("--mllp", default=8440, type=int, help="Port on which to replay HL7 messages via MLLP")
     flags = parser.parse_args()
     shutdown_mllp = threading.Event()
-    # t = threading.Thread(target=run_mllp_client, args=("0.0.0.0", flags.mllp, shutdown_mllp), daemon=True)
+    t = threading.Thread(target=run_mllp_client, args=("0.0.0.0", flags.mllp, shutdown_mllp), daemon=True)
 
-    #t.start()
-    #t.join()
-    run_mllp_client("0.0.0.0", flags.mllp, shutdown_mllp)
+    t.start()
+    t.join()
+    # run_mllp_client("0.0.0.0", flags.mllp, shutdown_mllp)
     print("Work Done!!!!!")
 
 

@@ -2,6 +2,18 @@ import aiohttp
 import asyncio
 
 
+async def run_http_pager(pager):
+    await pager.open_session()
+
+
+async def close_http_pager(pager):
+    await pager.close_session()
+
+
+async def parse_patients(pager, result):
+    await pager.parse(result)
+
+
 class Pager:
     def __init__(self, url='localhost:8441/page'):
         self.url = url
@@ -48,4 +60,3 @@ class Pager:
                     return None
         except:
             print("Pager: network error")
-
