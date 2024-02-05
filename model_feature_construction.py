@@ -45,23 +45,23 @@ def format_col_types(data):
     except:
         print("Columns could not be formatted")
 
-def read_and_format_data(filepath):
-    """ Read in the raw csv file.
+
+def read_and_format_data(data_frame_obj):
+    """ Read in data frame object from message
     Args:
-        filepath (str): directory of the raw data
+        data_frame_obj (pd.DataFrame): new message plus old results
 
     Returns:
-        pd.DataFrame: DataFrame with padded column names
+        pd.DataFrame: DataFrame with correct column types
     """
     try:     
         # Read in the data
-        data = pd.read_csv(filepath)
-        data['id'] = data.index # used for pivoting data
+        data_frame_obj['id'] = data_frame_obj.index # used for pivoting data
         print("Data loaded successfully")
         
         # Format the column dtypes
-        format_col_types(data)
-        return data
+        format_col_types(data_frame_obj)
+        return data_frame_obj
     except:
         print("Data load failed")
 
@@ -182,9 +182,11 @@ def get_summary_observations(df):
         print("Unable to consolidate features ahead of modelling")
 
 
-filepath = 'C:/Users/micha/OneDrive/Documents/AI_MSc/SEMLS/70102-oberbaum-bridge/dummy_input.csv'
-data = read_and_format_data(filepath)
-data = consolidate_tests(data)
-data = get_nhs_features(data)
-data = get_summary_observations(data)
+def preprocess_features(df_obj):
+    data = read_and_format_data(df_obj)
+    data = consolidate_tests(data)
+    data = get_nhs_features(data)
+    data = get_summary_observations(data)
+    return data
 
+    
