@@ -2,8 +2,10 @@ import pandas as pd
 import numpy as np
 
 def data_combination_dfAndDict(df, new_data_dict):
-    df.insert(loc = 1, column = 'age', value = pd.NA)
-    df.insert(loc = 2, column = 'sex', value = pd.NA)
+    if 'age' not in df.columns:
+        df.insert(loc = 1, column = 'age', value = pd.NA)
+    if 'sex' not in df.columns:
+        df.insert(loc = 2, column = 'sex', value = pd.NA)
 
     for mrn, record in new_data_dict.items(): # Check patient in the new dataset
         age = record[0]
@@ -38,22 +40,20 @@ def data_combination_dfAndDict(df, new_data_dict):
                 'creatinine_result_0': record[3]
             })
             df = pd.concat([df, new_patient_data.to_frame().T], ignore_index = True)
-    return df
-
-def data_combination_pathAndDict(history_data_path, new_data_dict):
-    history_data_df = pd.read_csv(history_data_path)
-    df = history_data_df.copy()
-    df = data_combination_dfAndDict(df, new_data_dict)
-    return df
+    return df[df['mrn'] == mrn]
 
 def main():
-    new_data_dict = {
-        1111: [30, 'm', '2024-01-11 11:11:00', 11.11],
-        2222: [25, 'f', '2024-02-22 22:22:00', 22.22],
-        16318: [25, 'f', '2024-03-30 13:33:00', 33.33]
-    }
-    df = data_combination_pathAndDict('history.csv', new_data_dict)
-    print(df)
+    exist_patient = {16318: [25, 'f', '2024-03-30 13:33:00', 33.33]}
+    new_patient = {1111: [30, 'm', '2024-01-11 11:11:00', 11.11]}
+    
+    history_data_df = pd.read_csv('history.csv')
+    df = history_data_df.copy()
+    
+    df_update_exist = data_combination_dfAndDict(df, exist_patient)
+    print(df_update_exist)
+    
+    df_add_new = data_combination_dfAndDict(df, new_patient)
+    print(df_add_new)
 
 if __name__ == "__main__":
     main()
