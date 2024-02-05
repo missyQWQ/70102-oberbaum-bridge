@@ -17,7 +17,7 @@ def format_date_cols(data):
     """ Finds and formats all date columns into %Y-%m-%d %H:%M:%S"""
     date_cols = data.filter(like='_date_').columns
     for date_col in date_cols:
-        data[date_col] = pd.to_datetime(data[date_col], dayfirst=True)
+        data[date_col] = pd.to_datetime(data[date_col], format = '%Y-%m-%d %H:%M:%S')
 
 
 def format_result_cols(data):
@@ -30,6 +30,7 @@ def format_result_cols(data):
 def format_other_cols(data):
     """Coerces other column data types to how we would expect"""
     data['age'] = pd.to_numeric(data["age"])
+    data['mrn'] = pd.to_numeric(data['mrn'])
     # We would prefer string cols, not object cols as in Numpy:
     # https://pandas.pydata.org/pandas-docs/stable/user_guide/text.html
     data['sex'] = data['sex'].astype('string')
@@ -44,39 +45,19 @@ def format_col_types(data):
         print("Columns formatted from raw input")
     except:
         print("Columns could not be formatted")
-
-
-def read_and_format_data(data_frame_obj):
-    """ Read in data frame object from message
-    Args:
-        data_frame_obj (pd.DataFrame): new message plus old results
-
-    Returns:
-        pd.DataFrame: DataFrame with correct column types
-    """
-    try:     
-        # Read in the data
-        data_frame_obj['id'] = data_frame_obj.index # used for pivoting data
-        print("Data loaded successfully")
         
-        # Format the column dtypes
-        format_col_types(data_frame_obj)
-        return data_frame_obj
-    except:
-        print("Data load failed")
-
-        
+                
 def consolidate_tests(df):
     try:
         """ Takes observation of df and consolidates test dates and scores.
         
         For example, 
-        id|creatinine_date_0|creatinine_result_0|creatinine_date_1|creatinine_result_1
-         0|        X        |        a          |       Y         |       b
+        mrn|creatinine_date_0|creatinine_result_0|creatinine_date_1|creatinine_result_1
+         0 |        X        |        a          |       Y         |       b
         into:
-        id| date | result |
-         0|  X   |   a    |
-         0|  Y   |   b    | 
+        mrn| date | result |
+         0 |  X   |   a    |
+         0 |  Y   |   b    | 
         
         Args:
             df (pd.DataFrame): dataframe from which an observation is selected
@@ -84,7 +65,7 @@ def consolidate_tests(df):
         Returns:
             pd.DataFrame: observation i but with a dates and results column
         """
-        id_cols = ['id', 'age', 'sex']
+        id_cols = ['mrn', 'age', 'sex']
         
         df_long = df.melt(id_vars = id_cols)
         df_long = df_long.dropna(subset=['value'])
@@ -139,28 +120,28 @@ def get_nhs_features(df):
     try:
         # Add arbitrary minute to where we have duplicates of 'id' and 'date'
         # Occassionally we have two tests results within the same minute, e.g. id 328005
-        duplicates_mask = df.duplicated(subset=['id', 'date'], keep='first') | df.duplicated(subset=['id', 'date'], keep='last')
-        last_rows = df[duplicates_mask].groupby('id').tail(1).index
+        duplicates_mask = df.duplicated(subset=['mrn', 'date'], keep='first') | df.duplicated(subset=['mrn', 'date'], keep='last')
+        last_rows = df[duplicates_mask].groupby('mrn').tail(1).index
         df.loc[last_rows, 'date'] = df.loc[duplicates_mask, 'date'] + pd.to_timedelta('1 minute')
         
-        df['C1_date'] =  df.groupby('id')['date'].transform('max')
+        df['C1_date'] =  df.groupby('mrn')['date'].transform('max')
         df['time_since_C1'] = pd.to_datetime(df['date']) - pd.to_datetime(df['C1_date'])
-        df['C1_result'] = df.groupby('id')['result'].transform('last')
+        df['C1_result'] = df.groupby('mrn')['result'].transform('last')
         
         within_7_days, within_48h, within_8_to_365_days = get_time_masks(df)
         
         # From these reference points, derive the metrics
-        min_result_within_1W = df[within_7_days].groupby('id')['result'].min().reset_index()
+        min_result_within_1W = df[within_7_days].groupby('mrn')['result'].min().reset_index()
         min_result_within_1W.rename(columns = {'result': 'RV1'}, inplace = True)
-        df = pd.merge(df, min_result_within_1W, on='id', how='left')
+        df = pd.merge(df, min_result_within_1W, on='mrn', how='left')
         
-        med_results_within_1Y = df[within_8_to_365_days].groupby('id')['result'].median().reset_index()
+        med_results_within_1Y = df[within_8_to_365_days].groupby('mrn')['result'].median().reset_index()
         med_results_within_1Y.rename(columns = {'result': 'RV2'}, inplace = True)
-        df = pd.merge(df, med_results_within_1Y, on='id', how='left')
+        df = pd.merge(df, med_results_within_1Y, on='mrn', how='left')
         
-        lowest_within_48h = df[within_48h].groupby('id')['result'].min().reset_index()
+        lowest_within_48h = df[within_48h].groupby('mrn')['result'].min().reset_index()
         lowest_within_48h.rename(columns = {'result': 'lowest_48h'}, inplace = True)
-        df = pd.merge(df, lowest_within_48h, on='id', how='left')
+        df = pd.merge(df, lowest_within_48h, on='mrn', how='left')
         df['D'] = df['C1_result'] - df['lowest_48h']
         print("RV1, RV2, D successfully computed from test results")
         return df
@@ -171,7 +152,7 @@ def get_nhs_features(df):
 def get_summary_observations(df):
     try:
         """ Simple function to remove individual test information now captured """
-        col_subset = ['age', 'sex', 'C1_result', 'RV1', 'RV2', 'D']
+        col_subset = ['mrn', 'age', 'sex', 'C1_result', 'RV1', 'RV2', 'D']
         """ Return an observation with all test results summarised by CV, RV1, RV2, D """
         summary_rows = df[col_subset]
         summary_rows = summary_rows.drop_duplicates()
@@ -183,8 +164,8 @@ def get_summary_observations(df):
 
 
 def preprocess_features(df_obj):
-    data = read_and_format_data(df_obj)
-    data = consolidate_tests(data)
+    format_col_types(df_obj)
+    data = consolidate_tests(df_obj)
     data = get_nhs_features(data)
     data = get_summary_observations(data)
     return data
