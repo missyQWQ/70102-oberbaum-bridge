@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import signal
 import socket
 import threading
 import http.server
@@ -173,20 +174,23 @@ def main():
     parser.add_argument("--pager", default=8441, type=int, help="Post on which to listen for pager requests via HTTP")
     flags = parser.parse_args()
     hl7_messages = read_hl7_messages(flags.messages)
-    shutdown_mllp = threading.Event()
-    t = threading.Thread(target=run_mllp_server, args=("0.0.0.0", flags.mllp, hl7_messages, shutdown_mllp), daemon=True)
-    t.start()
+    shutdown_event = threading.Event()
+    mllp_thread = threading.Thread(target=run_mllp_server, args=("0.0.0.0", flags.mllp, hl7_messages, shutdown_event), daemon=True)
+    mllp_thread.start()
     pager = None
     def shutdown():
-        shutdown_mllp.set()
+        shutdown_event.set()
         print("pager: graceful shutdown")
         pager.shutdown()
+    signal.signal(signal.SIGTERM, lambda signal, frame: shutdown())
     def new_pager_handler(*args, **kwargs):
         return PagerRequestHandler(shutdown, *args, **kwargs)
     pager = http.server.ThreadingHTTPServer(("0.0.0.0", flags.pager), new_pager_handler)
     print(f"pager: listening on 0.0.0.0:{flags.pager}")
-    pager.serve_forever(poll_interval=SHUTDOWN_POLL_INTERVAL_SECONDS)
-    t.join()
+    pager_thread = threading.Thread(target=pager.serve_forever, args=(), kwargs={"poll_interval": SHUTDOWN_POLL_INTERVAL_SECONDS}, daemon=True)
+    pager_thread.start()
+    mllp_thread.join()
+    pager_thread.join()
 
 if __name__ == "__main__":
     main()
