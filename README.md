@@ -18,49 +18,40 @@ creatine_results = {
 ```
 ## Data Processing
 data_combination_dfAndDict(DataFrame, dict): Receive a new record, check and update the history database, then return only the updated or newly added records.
-1. Update exist record
+
+History Database Format
 ```
-# Input
-DataFrame of the history database, for example:
 mrn  |creatinine_date_0    |creatinine_result_0|creatinine_date_1|creatinine_result_1|...
 16318|'2024-01-01 06:12:00'|       16.31       |       NAN       |        NAN        |...
-Dict of the newly coming in patient record, for example:
+```
+1. Update exist record
+```
+# Input format
 exist_patient = {
     16318: [25, 'f', '2024-03-30 13:33:00', 33.33]
 }
-# Output
-Only the updated record:
+# Output format
 mrn  |age|sex|creatinine_date_0    |creatinine_result_0|creatinine_date_1    |creatinine_result_1|...
 16318|25 |'f'|'2024-01-01 06:12:00'|       16.31       |'2024-03-30 13:33:00'|       33.33       |...
 ```
 2. Add new record
 ```
-# Input
-DataFrame of the history database, for example:
-mrn  |creatinine_date_0    |creatinine_result_0|creatinine_date_1|creatinine_result_1|...
-16318|'2024-01-01 06:12:00'|       16.31       |       NAN       |        NAN        |...
-Dict of the newly coming in patient record, for example:
+# Input format
 new_patient = {
     1111: [30, 'm', '2024-01-11 11:11:00', 11.11]
 }
-# Output
-Only the new added record:
+# Output format
 mrn |age|sex|creatinine_date_0    |creatinine_result_0|creatinine_date_1|creatinine_result_1|...
 1111|30 |'m'|'2024-01-11 11:11:00'|       11.11       |       NAN       |        NAN        |...
 ```
 3. Update one or multiple exist records and/or add one or multiple new records
 ```
-# Input
-DataFrame of the history database, for example:
-mrn  |creatinine_date_0    |creatinine_result_0|creatinine_date_1|creatinine_result_1|...
-16318|'2024-01-01 06:12:00'|       16.31       |       NAN       |        NAN        |...
-Dict of the newly coming in patient records, for example:
+# Input format
 exist_and_new_patient = {
     16318: [25, 'f', '2024-03-30 13:33:00', 33.33],
     1111: [30, 'm', '2024-01-11 11:11:00', 11.11]
 }
-# Output
-Only the updated record:
+# Output format
 mrn  |age|sex|creatinine_date_0    |creatinine_result_0|creatinine_date_1    |creatinine_result_1|...
 16318|25 |'f'|'2024-01-01 06:12:00'|       16.31       |'2024-03-30 13:33:00'|       33.33       |...
 1111 |30 |'m'|'2024-01-11 11:11:00'|       11.11       |       NAN           |        NAN        |...
