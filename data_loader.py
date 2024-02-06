@@ -8,6 +8,7 @@ from pager import *
 from data_processing import data_combination_dfAndDict
 from model_feature_construction import preprocess_features
 from run_model import run_model
+
 VERSION = "0.0.0"
 MLLP_BUFFER_SIZE = 1024
 MLLP_TIMEOUT_SECONDS = 10
@@ -23,6 +24,14 @@ raw_data = []
 admitted_patient = {}
 discharged_patient = []
 creatine_results = {}
+
+
+async def predict(sex_encoder, aki_encoder, clf_model, pager, history, result):
+    raw = data_combination_dfAndDict(history, result)
+    feature = preprocess_features(raw)
+    output = run_model(feature, clf_model, sex_encoder, aki_encoder)
+    task = asyncio.create_task(pager.parse(output))
+    await task
 
 
 def parse_hl7message(record):
@@ -70,10 +79,7 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
             result = parse_hl7message(msg)
 
             if result is not None:
-                raw = data_combination_dfAndDict(history, result)
-                feature = preprocess_features(raw)
-                output = run_model(feature, clf_model, sex_encoder, aki_encoder)
-                asyncio.run(parse_patients(pager, output))
+                asyncio.run(predict(sex_encoder, aki_encoder, clf_model, pager, history, result))
 
             mllp = bytes(chr(MLLP_START_OF_BLOCK), "ascii")
             mllp += ACK
