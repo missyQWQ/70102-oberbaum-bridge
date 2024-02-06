@@ -8,19 +8,15 @@ from pager import *
 import model_feature_construction
 import pandas as pd
 import pickle
-import threading
+import multiprocessing
 
 
 def main(history_data, mllp, pager, sex_encoder, aki_encoder, clf_model):
-    http_pager = Pager()
-    asyncio.run(run_http_pager(http_pager))
-    shutdown_mllp = threading.Event()
-    t = threading.Thread(target=run_mllp_client, args=("0.0.0.0", mllp, shutdown_mllp, sex_encoder,
+    http_pager = Pager("http://localhost:8441/page")
+    shutdown_mllp = multiprocessing.Event()
+    t = multiprocessing.Process(target=run_mllp_client, args=("0.0.0.0", mllp, shutdown_mllp, sex_encoder,
                                                     aki_encoder, clf_model, pager, http_pager, history_data), daemon=True)
     t.start()
-    # run_mllp_client("0.0.0.0", mllp, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager,
-    # history_data)
-    time.sleep(2)
     print("Server started...")
     try:
         while True:
@@ -28,7 +24,6 @@ def main(history_data, mllp, pager, sex_encoder, aki_encoder, clf_model):
     except KeyboardInterrupt:
         print("Detected CTRL+C, safely exiting.")
         # Perform cleanup here
-        asyncio.run(close_http_pager(http_pager))
         shutdown_mllp.set()
     t.join()
 
@@ -45,6 +40,8 @@ if __name__ == "__main__":
                         help="Post on which to listen for pager requests via HTTP")
     parser.add_argument("--clf_model", default='clf_model.pkl',
                         help="Post on which to listen for pager requests via HTTP")
+    parser.add_argument("--http", default='http://localhost:8441/page', help="URL to send page requests to pager system")
+
     flags = parser.parse_args()
     history_data_df = pd.read_csv(flags.history)
     df = history_data_df.copy()

@@ -13,8 +13,9 @@ async def close_http_pager(pager):
 async def parse_patients(pager, result):
     await pager.parse(result)
 
+
 class Pager:
-    def __init__(self, url='0.0.0.0:8441/page'):
+    def __init__(self, url="http://localhost:8441/page"):
         self.url = url
         self.session = None
         print("Pager constructed...")

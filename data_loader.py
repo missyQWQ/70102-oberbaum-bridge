@@ -26,13 +26,10 @@ discharged_patient = []
 creatine_results = {}
 
 
-"""async def predict(sex_encoder, aki_encoder, clf_model, pager, http_pager, history, result):
-    raw = data_combination_dfAndDict(history, result)
-    feature = preprocess_features(raw)
-    output = run_model(feature, clf_model, sex_encoder, aki_encoder)
-    output = (output[0], [output[1].strip("[]").strip("'")][0])
-    if output[1] == 'y':
-        await http_pager.parse(output)"""
+async def send_message(pager, message):
+    await pager.open_session()
+    await pager.parse(message)
+    await pager.close_session()
 
 
 def parse_hl7message(record):
@@ -79,14 +76,13 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
             msg = received[0].decode('ascii')
 
             result = parse_hl7message(msg)
-
             if result is not None:
                 raw = data_combination_dfAndDict(history, result)
                 feature = preprocess_features(raw)
                 output = run_model(feature, clf_model, sex_encoder, aki_encoder)
                 output = (output[0], [output[1].strip("[]").strip("'")][0])
                 if output[1] == 'y':
-                    asyncio.run(http_pager.parse(output))
+                    asyncio.run(send_message(http_pager, output))
 
             count += 1
             if count % 100 == 0:
