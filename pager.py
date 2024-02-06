@@ -31,7 +31,8 @@ class Pager:
         if self.session is not None and not self.session.closed:
             await self.session.close()
             print("Session Closed!")
-        print("Session Already Closed? Is this expected???")
+        else:
+            print("Session Already Closed? Is this expected???")
 
     async def parse(self, res):
         (MRN, label) = res
@@ -42,11 +43,11 @@ class Pager:
                 print(f"Unidentified MRN:{MRN}")
                 raise Exception("Pager: Probably broken data?")
             print(f"AKI detected for {MRN}, send message to pager.")
-            await self.post(int(MRN))
+            await self.post(str(MRN))
 
         elif label != 'n':
+            print("Pager: Probably broken data?")
             raise Exception(f"Unidentified label:{label}")
-        print("Pager: Probably broken data?")
 
     async def post(self, data):
         try:
@@ -58,5 +59,6 @@ class Pager:
                 else:
                     print(f"Error: server returns {response.status} for data {data}")
                     return None
-        except:
+        except Exception as e:
+            print(e)
             print("Pager: network error")
