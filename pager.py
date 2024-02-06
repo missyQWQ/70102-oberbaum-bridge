@@ -13,7 +13,6 @@ async def close_http_pager(pager):
 async def parse_patients(pager, result):
     await pager.parse(result)
 
-
 class Pager:
     def __init__(self, url='localhost:8441/page'):
         self.url = url
