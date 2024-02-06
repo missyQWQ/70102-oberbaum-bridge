@@ -26,12 +26,13 @@ discharged_patient = []
 creatine_results = {}
 
 
-async def predict(sex_encoder, aki_encoder, clf_model, pager, history, result):
+"""async def predict(sex_encoder, aki_encoder, clf_model, pager, http_pager, history, result):
     raw = data_combination_dfAndDict(history, result)
     feature = preprocess_features(raw)
     output = run_model(feature, clf_model, sex_encoder, aki_encoder)
-    task = asyncio.create_task(pager.parse(output))
-    await task
+    output = (output[0], [output[1].strip("[]").strip("'")][0])
+    if output[1] == 'y':
+        await http_pager.parse(output)"""
 
 
 def parse_hl7message(record):
@@ -58,12 +59,13 @@ def parse_hl7message(record):
                                                  admitted_patient[pid_record[-1]][1],
                                                  formatted_datetime, round(float(obx_record[-1]), 2)]
 
-        return [int(pid_record[-1]), admitted_patient[pid_record[-1]][0], admitted_patient[pid_record[-1]][1],
-                formatted_datetime, round(float(obx_record[-1]), 2)]
+        return {int(pid_record[-1]): [admitted_patient[pid_record[-1]][0], admitted_patient[pid_record[-1]][1],
+                                      formatted_datetime, round(float(obx_record[-1]), 2)]}
 
 
-def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, history):
+def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager, history):
     buffer = b""
+    count = 0
     while not shutdown_mllp.is_set():
         try:
             received = []
@@ -79,8 +81,16 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
             result = parse_hl7message(msg)
 
             if result is not None:
-                asyncio.run(predict(sex_encoder, aki_encoder, clf_model, pager, history, result))
+                raw = data_combination_dfAndDict(history, result)
+                feature = preprocess_features(raw)
+                output = run_model(feature, clf_model, sex_encoder, aki_encoder)
+                output = (output[0], [output[1].strip("[]").strip("'")][0])
+                if output[1] == 'y':
+                    asyncio.run(http_pager.parse(output))
 
+            count += 1
+            if count % 100 == 0:
+                print(count)
             mllp = bytes(chr(MLLP_START_OF_BLOCK), "ascii")
             mllp += ACK
             mllp += bytes(chr(MLLP_END_OF_BLOCK) + chr(MLLP_CARRIAGE_RETURN), "ascii")
@@ -93,7 +103,7 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
     client.close()
 
 
-def run_mllp_client(host, port, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, history):
+def run_mllp_client(host, port, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager, history):
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         while not shutdown_mllp.is_set():
             try:
@@ -103,7 +113,7 @@ def run_mllp_client(host, port, shutdown_mllp, sex_encoder, aki_encoder, clf_mod
                 print(f"mllp: listening on {host}:{port}")
                 source = f"{host}:{port}"
                 print(f"mllp: {source}: make a connection")
-                serve_mllp_dataloader(s, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, history)
+                serve_mllp_dataloader(s, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager, history)
             except Exception as e:
                 time.sleep(5)
                 continue

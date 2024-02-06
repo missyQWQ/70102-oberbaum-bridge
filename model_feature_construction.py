@@ -42,7 +42,7 @@ def format_col_types(data):
         format_date_cols(data)
         format_result_cols(data)
         format_other_cols(data)
-        print("Columns formatted from raw input")
+        #print("Columns formatted from raw input")
     except:
         print("Columns could not be formatted")
         
@@ -75,7 +75,7 @@ def consolidate_tests(df):
                                               columns = 'variable',
                                               values = 'value',
                                               aggfunc='first').reset_index()
-        print("Data reshaped")
+        #print("Data reshaped")
         return df_wide
     except:
         print("Data reshaping failed")
@@ -96,7 +96,7 @@ def get_time_masks(df):
         within_7_days = np.logical_and(
             df['time_since_C1'] > pd.Timedelta(value=-8, unit = 'days'),
             df['time_since_C1'] < pd.Timedelta(value=0))
-        print("Time masks constructed")
+        #print("Time masks constructed")
         return within_7_days, within_48h, within_8_to_365_days
     except:
         print("Failed to construct time masks")
@@ -143,7 +143,7 @@ def get_nhs_features(df):
         lowest_within_48h.rename(columns = {'result': 'lowest_48h'}, inplace = True)
         df = pd.merge(df, lowest_within_48h, on='mrn', how='left')
         df['D'] = df['C1_result'] - df['lowest_48h']
-        print("RV1, RV2, D successfully computed from test results")
+        #print("RV1, RV2, D successfully computed from test results")
         return df
     except:
         print("Problem computing NHS metrics")
@@ -157,7 +157,7 @@ def get_summary_observations(df):
         summary_rows = df[col_subset]
         summary_rows = summary_rows.drop_duplicates()
         summary_rows.reset_index(drop=True, inplace=True)
-        print("Data ready to model on")
+        #print("Data ready to model on")
         return summary_rows
     except:
         print("Unable to consolidate features ahead of modelling")
