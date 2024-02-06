@@ -1,11 +1,18 @@
 import pandas as pd 
 import numpy as np
 
+"""
+Receive a new record, 
+check and update the history database, 
+then return only the updated or newly added records.
+"""
 def data_combination_dfAndDict(df, new_data_dict):
     if 'age' not in df.columns:
         df.insert(loc = 1, column = 'age', value = pd.NA)
     if 'sex' not in df.columns:
         df.insert(loc = 2, column = 'sex', value = pd.NA)
+
+    updated_or_newly_added_record = pd.DataFrame()
 
     for mrn, record in new_data_dict.items(): # Check patient in the new dataset
         age = record[0]
@@ -40,20 +47,30 @@ def data_combination_dfAndDict(df, new_data_dict):
                 'creatinine_result_0': record[3]
             })
             df = pd.concat([df, new_patient_data.to_frame().T], ignore_index = True)
-    return df[df['mrn'] == mrn]
+        
+        updated_or_newly_added_record = pd.concat([updated_or_newly_added_record, df[df['mrn'] == mrn]])
+    
+    return updated_or_newly_added_record
 
 def main():
     exist_patient = {16318: [25, 'f', '2024-03-30 13:33:00', 33.33]}
     new_patient = {1111: [30, 'm', '2024-01-11 11:11:00', 11.11]}
+    exist_and_new_patient = {16318: [25, 'f', '2024-03-30 13:33:00', 33.33],1111: [30, 'm', '2024-01-11 11:11:00', 11.11]}
     
     history_data_df = pd.read_csv('history.csv')
     df = history_data_df.copy()
     
+    # Update exist record(s)
     df_update_exist = data_combination_dfAndDict(df, exist_patient)
     print(df_update_exist)
     
+    # Add new record(s)
     df_add_new = data_combination_dfAndDict(df, new_patient)
     print(df_add_new)
+
+    # Update exist record(s) and/or add new record(s)
+    df_update_exist_and_add_new = data_combination_dfAndDict(df, exist_and_new_patient)
+    print(df_update_exist_and_add_new)
 
 if __name__ == "__main__":
     main()
