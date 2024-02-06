@@ -68,7 +68,7 @@ def main():
     df_add_new = data_combination_dfAndDict(df, new_patient)
     print(df_add_new)
 
-    # Update exist record(s) and/or add new record(s)
+    # Update exist and add new record(s)
     df_update_exist_and_add_new = data_combination_dfAndDict(df, exist_and_new_patient)
     print(df_update_exist_and_add_new)
 

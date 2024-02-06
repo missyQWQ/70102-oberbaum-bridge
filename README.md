@@ -19,7 +19,7 @@ creatine_results = {
 ## Data Processing
 data_combination_dfAndDict(DataFrame, dict): Receive a new record, check and update the history database, then return only the updated or newly added records.
 
-History Database Format
+* History Database Format
 ```
 mrn  |creatinine_date_0    |creatinine_result_0|creatinine_date_1|creatinine_result_1|...
 16318|'2024-01-01 06:12:00'|       16.31       |       NAN       |        NAN        |...
