@@ -14,6 +14,7 @@ COPY data_processing.py /model/
 COPY main.py /model/
 COPY model_feature_construction.py /model/
 COPY pager.py /model/
+COPY run_model.py /model/
 COPY aki.csv /model/
 COPY history.csv /model/
 COPY dummy_input.csv /model/
@@ -29,4 +30,4 @@ WORKDIR /model/
 RUN echo "$(ls -la )"
 #RUN pytest
 CMD /simulator/simulator.py --messages=/data/messages.mllp
-CMD /model/main.py --mllp=8440 --pager_address=8441
+CMD /model/main.py --MLLP_ADDRESS=8440 --PAGER_ADDRESS=8441

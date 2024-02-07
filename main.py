@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import argparse
 import asyncio
 import time
@@ -31,9 +32,9 @@ def main(history_data, mllp, pager, sex_encoder, aki_encoder, clf_model):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--history", default="history.csv", help="History Creatine Record to be used for predictions")
-    parser.add_argument("--mllp", default=8440, type=int,
+    parser.add_argument("--MLLP_ADDRESS", default=8440, type=int,
                         help="Port connecting server to receives HL7 messages via MLLP")
-    parser.add_argument("--pager", default=8441, type=int, help="Post on which to listen for pager requests via HTTP")
+    parser.add_argument("--PAGER_ADDRESS", default=8441, type=int, help="Post on which to listen for pager requests via HTTP")
     parser.add_argument("--sex_encoder", default='sex_encoder_model.pkl',
                         help="Post on which to listen for pager requests via HTTP")
     parser.add_argument("--aki_encoder", default='aki_encoder_model.pkl',
@@ -55,4 +56,4 @@ if __name__ == "__main__":
     with open(flags.clf_model, "rb") as file:
         clf_model = pickle.load(file)
     print("Cached, Ready to run server")
-    main(df, flags.mllp, flags.pager, sex_encoder, aki_encoder, clf_model)
+    main(df, flags.MLLP_ADDRESS, flags.PAGER_ADDRESS, sex_encoder, aki_encoder, clf_model)
