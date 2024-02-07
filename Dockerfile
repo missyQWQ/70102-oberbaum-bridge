@@ -30,4 +30,4 @@ WORKDIR /model/
 RUN echo "$(ls -la )"
 #RUN pytest
 CMD /simulator/simulator.py --messages=/data/messages.mllp
-CMD /model/main.py --mllp=8440 --pager_address=8441
+CMD /model/main.py --MLLP_ADDRESS=8440 --PAGER_ADDRESS=8441
