@@ -29,5 +29,6 @@ RUN pip3 install -r /model/requirements.txt
 WORKDIR /model/
 RUN echo "$(ls -la )"
 # RUN pytest
-CMD /simulator/simulator.py --messages=/data/messages.mllp
-# CMD python3 /model/main.py --MLLP_ADDRESS=$MLLP_ADDRESS --PAGER_ADDRESS=$PAGER_ADDRESS
+# uncomment for test
+# CMD /simulator/simulator.py --messages=/data/messages.mllp
+CMD python3 /model/main.py --MLLP_ADDRESS=$MLLP_ADDRESS --PAGER_ADDRESS=$PAGER_ADDRESS

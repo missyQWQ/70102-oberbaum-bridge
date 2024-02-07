@@ -13,18 +13,21 @@ import multiprocessing
 
 
 def main(history_data, mllp, pager, sex_encoder, aki_encoder, clf_model):
-    http_pager = Pager(f"http://localhost:{pager}/page")
+    http_pager = Pager(f"http://{pager}/page")
     shutdown_mllp = multiprocessing.Event()
+    ip_address, port_str = mllp.split(":")
+    # Convert port string to integer
+    port_number = int(port_str)
     print("Server started...")
-    run_mllp_client("0.0.0.0", mllp, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager, history_data)
+    run_mllp_client(ip_address, port_number, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager, history_data)
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--history", default="history.csv", help="History Creatine Record to be used for predictions")
-    parser.add_argument("--MLLP_ADDRESS", default=8440, type=int,
+    parser.add_argument("--MLLP_ADDRESS", default='0.0.0.0:8440',
                         help="Port connecting server to receives HL7 messages via MLLP")
-    parser.add_argument("--PAGER_ADDRESS", default=8441, type=int, help="Post on which to listen for pager requests via HTTP")
+    parser.add_argument("--PAGER_ADDRESS", default='0.0.0.0:8441', help="Post on which to listen for pager requests via HTTP")
     parser.add_argument("--sex_encoder", default='sex_encoder_model.pkl',
                         help="Post on which to listen for pager requests via HTTP")
     parser.add_argument("--aki_encoder", default='aki_encoder_model.pkl',

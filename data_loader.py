@@ -82,10 +82,7 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
             if result is not None:
                 raw = data_combination_dfAndDict(history, result)
                 feature = preprocess_features(raw)
-                t1 = time.time()
                 output = model.run_model(feature)
-                t2 = time.time()
-                print("Model: ", t2 - t1)
                 output = (output[0], [output[1].strip("[]").strip("'")][0])
                 if output[1] == 'y':
                     asyncio.run(send_message(http_pager, output))
