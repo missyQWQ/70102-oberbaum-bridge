@@ -1,10 +1,8 @@
 import pytest
 import pandas as pd
-import sys
-
-sys.path.append("")
-from data_processing import data_combination_dfAndDict
-
+import sys 
+sys.path.append("..") 
+from ..data_processing import data_combination_dfAndDict
 
 def test_update_exist_record():
     history_data_df = pd.DataFrame({
@@ -23,7 +21,6 @@ def test_update_exist_record():
     assert df_update_exist['creatinine_date_1'].values[0] == '2024-03-30 13:33:00'
     assert df_update_exist['creatinine_result_1'].values[0] == 33.33
 
-
 def test_add_new_record():
     history_data_df = pd.DataFrame({
         'mrn': [16318],
@@ -38,7 +35,6 @@ def test_add_new_record():
     assert df_add_new['sex'].values[0] == 'm'
     assert df_add_new['creatinine_date_0'].values[0] == '2024-01-11 11:11:00'
     assert df_add_new['creatinine_result_0'].values[0] == 11.11
-
 
 def test_update_exist_and_add_new_records():
     history_data_df = pd.DataFrame({
