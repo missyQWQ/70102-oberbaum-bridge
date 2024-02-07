@@ -13,20 +13,10 @@ import multiprocessing
 
 
 def main(history_data, mllp, pager, sex_encoder, aki_encoder, clf_model):
-    http_pager = Pager("http://localhost:8441/page")
+    http_pager = Pager(f"http://localhost:{pager}/page")
     shutdown_mllp = multiprocessing.Event()
-    t = multiprocessing.Process(target=run_mllp_client, args=("0.0.0.0", mllp, shutdown_mllp, sex_encoder,
-                                                    aki_encoder, clf_model, pager, http_pager, history_data), daemon=True)
-    t.start()
     print("Server started...")
-    try:
-        while True:
-            pass
-    except KeyboardInterrupt:
-        print("Detected CTRL+C, safely exiting.")
-        # Perform cleanup here
-        shutdown_mllp.set()
-    t.join()
+    run_mllp_client("0.0.0.0", mllp, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager, history_data)
 
 
 if __name__ == "__main__":
