@@ -1,5 +1,20 @@
 # 70102-Oberbaum-Bridge
 
+## Package it up!
+1. Git pull...
+2. Bash from the 70102 directory
+3. python3 -m pip install --upgrade pip
+4. python3 -m pip install --upgrade build
+5. python3 -m build
+
+That will build the package. (See https://packaging.python.org/en/latest/tutorials/packaging-projects/)
+
+Then run "pip install -e ." which will install the package in "editable" mode
+
+From there, you can just run "pytest" or specific tests e.g. "pytest tests/test_feature_construction.py" for example.
+
+Happy testing ^_^
+
 ## Output Format for Data Processing
 1. Admitted Patient(dict)
 2. discharged_patient(list)
