@@ -1,7 +1,7 @@
 import pytest
 import pandas as pd
 import sys 
-sys.path.append("..") 
+sys.path.append("../..")
 from ..data_processing import data_combination_dfAndDict
 
 def test_update_exist_record():
