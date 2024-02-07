@@ -14,6 +14,7 @@ COPY data_processing.py /model/
 COPY main.py /model/
 COPY model_feature_construction.py /model/
 COPY pager.py /model/
+COPY run_model.py /model/
 COPY aki.csv /model/
 COPY history.csv /model/
 COPY dummy_input.csv /model/
