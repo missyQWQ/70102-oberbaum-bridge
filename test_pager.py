@@ -2,7 +2,7 @@ import pytest
 import pytest_asyncio
 from aiohttp import web
 import sys 
-sys.path.append("..") 
+sys.path.append("")
 from pager import Pager
 
 

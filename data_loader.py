@@ -71,19 +71,35 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
                 if len(r) == 0:
                     raise Exception("server closed connection")
                 buffer += r
+                t1 = time.time()
                 received, buffer = parse_mllp_messages(buffer)
-
+                t2 = time.time()
+                print("parse_mllp_messages: ", t2 - t1)
             msg = received[0].decode('ascii')
 
+            t1 = time.time()
             result = parse_hl7message(msg)
+            t2 = time.time()
+            print("parse_hl7message: ", t2 - t1)
             if result is not None:
+                t1 = time.time()
                 raw = data_combination_dfAndDict(history, result)
+                t2 = time.time()
+                print("data_combination_dfAndDict: ", t2 - t1)
+                t1 = time.time()
                 feature = preprocess_features(raw)
+                t2 = time.time()
+                print("preprocess_features: ", t2 - t1)
+                t1 = time.time()
                 output = run_model(feature, clf_model, sex_encoder, aki_encoder)
+                t2 = time.time()
+                print("run_model: ", t2 - t1, "\n")
                 output = (output[0], [output[1].strip("[]").strip("'")][0])
                 if output[1] == 'y':
+                    t2 = time.time()
                     asyncio.run(send_message(http_pager, output))
-
+                    t1 = time.time()
+                    print("Send HTTP:", t1 - t2, '\n')
             count += 1
             if count % 100 == 0:
                 print(count)
@@ -109,6 +125,7 @@ def run_mllp_client(host, port, shutdown_mllp, sex_encoder, aki_encoder, clf_mod
             serve_mllp_dataloader(s, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager, history)
         except Exception as e:
             print("connect again")
+            time.sleep(2)
             continue
 
     print("mllp: graceful shutdown")
