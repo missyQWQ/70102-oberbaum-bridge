@@ -100,21 +100,18 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
 
 
 def run_mllp_client(host, port, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager, history):
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-        while not shutdown_mllp.is_set():
-            try:
-                s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-                s.connect((host, port))
-                s.settimeout(SHUTDOWN_POLL_INTERVAL_SECONDS)
-                print(f"mllp: listening on {host}:{port}")
-                source = f"{host}:{port}"
-                print(f"mllp: {source}: make a connection")
-                serve_mllp_dataloader(s, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager, history)
-            except Exception as e:
-                time.sleep(5)
-                continue
+    while not shutdown_mllp.is_set():
+        try:
+            # Create a socket object using IPv4 and TCP protocol
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.connect((host, port))
+            print(f"Successfully connected to {host}:{port}")
+            serve_mllp_dataloader(s, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager, history)
+        except Exception as e:
+            print("connect again")
+            continue
 
-        print("mllp: graceful shutdown")
+    print("mllp: graceful shutdown")
 
 
 def parse_mllp_messages(buffer):
