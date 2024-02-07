@@ -1,8 +1,8 @@
 import pytest
 import pandas as pd
-import sys 
-sys.path.append("../..")
-from ..data_processing import data_combination_dfAndDict
+# import sys 
+# sys.path.append("../..")
+from src.data_processing import data_combination_dfAndDict
 
 def test_update_exist_record():
     history_data_df = pd.DataFrame({

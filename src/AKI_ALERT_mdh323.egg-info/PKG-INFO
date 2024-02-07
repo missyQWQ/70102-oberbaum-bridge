@@ -1,3 +1,16 @@
+Metadata-Version: 2.1
+Name: AKI_ALERT_mdh323
+Version: 0.0.1
+Summary: A package for the Software Engineering for Machine Learning Systems (SEMLS) module
+Author-email: Example Author <author@example.com>
+Project-URL: Homepage, https://gitlab.doc.ic.ac.uk/pw723/70102-oberbaum-bridge
+Classifier: Programming Language :: Python :: 3
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+License-File: LICENSE.txt
+
 # 70102-Oberbaum-Bridge
 
 ## Output Format for Data Processing
