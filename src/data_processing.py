@@ -2,9 +2,10 @@ import pandas as pd
 import numpy as np
 
 """
-Receive a new record, 
-check and update the history database, 
-then return only the updated or newly added records.
+Receive a new blood test record.
+Tell if the patient if already exist in the database or not,
+* if exist, update database with the newly received record and return this patient's basic information as well as all blood test records
+* if not exist, insert this new blood record together with this patient's basic information to the database and return them
 """
 def data_combination_receive_blood_test(df, mrn, record):      
     if mrn in df['mrn'].values: # If this is a old patient already in the records, then update the database
@@ -35,6 +36,13 @@ def data_combination_receive_blood_test(df, mrn, record):
             
     return df
 
+
+"""
+Receive a patient admitting record.
+Tell if the patient if already exist in the database or not,
+* if exist, return this patient's basic information as well as all blood test records
+* if not exist, insert this patient's basic information to the database and return them
+"""
 def data_combination_admit_patient(df, mrn, record):
     if mrn in df['mrn'].values:
         index = df.index[df['mrn'] == mrn][0]
@@ -48,6 +56,13 @@ def data_combination_admit_patient(df, mrn, record):
     
     return df
 
+
+"""
+Receive a new record, 
+Tell if it's for patient admitting or blood test receiving.
+* Patient admitting -> Return this patient's basic information and history blood test records if available
+* Blood test receiving -> Update database & Return this patient's basic information and all blood test records
+"""
 def data_combination_dfAndDict(df, new_data_dict):
     if 'age' not in df.columns:
         df.insert(loc = 1, column = 'age', value = pd.NA)
@@ -67,6 +82,13 @@ def data_combination_dfAndDict(df, new_data_dict):
     
     return queried_record
 
+
+"""
+Test 3 situations: 
+1. Admit and/or insert data for an exist patient who has history in the database
+2. Admit and/or insert data for a new patient who has no history in the database
+3. Admit and/or insert data for multiple patients
+"""
 def main():
     history_data_df = pd.read_csv('history.csv')
     df = history_data_df.copy()
