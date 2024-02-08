@@ -26,14 +26,12 @@ def data_combination_receive_blood_test(df, mrn, record):
                 break
             i += 1
     else: # If this is a new patient, then add to the database
-        new_patient_data = pd.Series({
-            'mrn': mrn,
-            'age': record[0],
-            'sex': record[1],
-            'creatinine_date_0': record[2],
-            'creatinine_result_0': record[3]
-        })
-        df = pd.concat([df, new_patient_data.to_frame().T], ignore_index = True)
+        new_row_idx = df.index.max() + 1 if not df.index.empty else 0
+        df.loc[new_row_idx, 'mrn'] = mrn
+        df.loc[new_row_idx, 'age'] = record[0]
+        df.loc[new_row_idx, 'sex'] = record[1]
+        df.loc[new_row_idx, 'creatinine_date_0'] = record[2]
+        df.loc[new_row_idx, 'creatinine_result_0'] = record[3]
             
     return df
 
@@ -43,12 +41,10 @@ def data_combination_admit_patient(df, mrn, record):
         df.at[index, 'age'] = record[0]
         df.at[index, 'sex'] = record[1]
     else:
-        new_patient_data = pd.Series({
-            'mrn': mrn,
-            'age': record[0],
-            'sex': record[1]
-        })
-        df = pd.concat([df, new_patient_data.to_frame().T], ignore_index = True)
+        new_row_idx = df.index.max() + 1 if not df.index.empty else 0
+        df.loc[new_row_idx, 'mrn'] = mrn
+        df.loc[new_row_idx, 'age'] = record[0]
+        df.loc[new_row_idx, 'sex'] = record[1]
     
     return df
 
@@ -92,6 +88,7 @@ def main():
 # -------------------------- New Patient -------------------------------
     patient_new_admit = {1111: [11, 'm']}
     patient_new_blood_test = {1111: [11, 'm', '2024-01-11 11:11:00', 11.11]}
+    patient_new_blood_test_2 = {1111: [11, 'm', '2024-02-21 21:21:00', 21.21]}
     # 1) Admit a patient(new, no history) to the hospital
     df_admit_new = data_combination_dfAndDict(df, patient_new_admit)
     print('1.Admit 1111(new, no history) to the hospital. Return:')
@@ -102,6 +99,11 @@ def main():
     print('2.Receive new blood test for 1111. Return:')
     print(df_receive_blood_new.iloc[:, :9])
 
+    # 3) Insert that patient a new blood test record again
+    df_receive_blood_new = data_combination_dfAndDict(df, patient_new_blood_test_2)
+    print('3.Receive one more blood test for 1111. Return:')
+    print(df_receive_blood_new.iloc[:, :9])
+
 # ------------------------ Multiple Patients ---------------------------
     multiple_patients_blood_tests = {
         1111: [11, 'm', '2024-01-12 12:12:00', 12.12], 
@@ -109,7 +111,7 @@ def main():
         2222: [22, 'f', '2024-02-12 22:22:00', 22.22]
     }
     df_receive_blood_multiple = data_combination_dfAndDict(df, multiple_patients_blood_tests)
-    print('2.Receive multiple blood tests. Return:')
+    print('Receive multiple blood tests. Return:')
     print(df_receive_blood_multiple.iloc[:, :9])
 
 if __name__ == "__main__":
