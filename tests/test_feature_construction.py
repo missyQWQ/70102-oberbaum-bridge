@@ -1,10 +1,10 @@
 import pytest
 import pandas as pd 
-from src.model_feature_construction import *
+from model_feature_construction import *
 
 def dataset(func):
     def wrapper(*args, **kwargs):
-        data = pd.read_csv('src/history.csv')
+        data = pd.read_csv('history.csv')
         data = pd.DataFrame(data)
         return func(data=data, *args, **kwargs)
     return wrapper

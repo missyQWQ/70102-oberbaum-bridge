@@ -24,11 +24,13 @@ COPY README.md /model/
 COPY /src/aki_encoder_model.pkl /model/
 COPY /src/clf_model.pkl /model/
 COPY /src/sex_encoder_model.pkl /model/
-COPY /tests/ /tests/
+COPY /tests/test_data_processing.py /model/
+COPY /tests/test_feature_construction.py /model/
+COPY /tests/test_pager.py /model/
 RUN pip3 install -r /model/requirements.txt
 WORKDIR /model/
 RUN echo "$(ls -la )"
-# RUN pytest
+RUN pytest
 # uncomment for test
 CMD /simulator/simulator.py --messages=/data/messages.mllp
 # CMD python3 /model/main.py --MLLP_ADDRESS=$MLLP_ADDRESS --PAGER_ADDRESS=$PAGER_ADDRESS
