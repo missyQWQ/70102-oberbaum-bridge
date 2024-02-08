@@ -65,7 +65,7 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
     buffer = b""
     count = 0
     model = Model(sex_encoder, aki_encoder, clf_model)
-
+    r = None
     while not shutdown_mllp.is_set():
         try:
             received = []
@@ -81,6 +81,7 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
 
             if result is not None:
                 raw = data_combination_dfAndDict(history, result)
+                r = raw
                 if not math.isnan(raw.iloc[0]['creatinine_result_0']):
                     feature = preprocess_features(raw)
                     output = model.run_model(feature)
@@ -91,9 +92,6 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
                             print(list(result.keys())[0], result[list(result.keys())[0]][2])
                             paged_patient.append(list(result.keys())[0])
 
-            """count += 1
-            if count % 100 == 0:
-                print(count)"""
 
             mllp = bytes(chr(MLLP_START_OF_BLOCK), "ascii")
             mllp += ACK
@@ -101,6 +99,7 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
             client.sendall(mllp)
         except Exception as e:
             print(f"mllp: source: closing connection->{e}")
+            print(r)
             break
     else:
         print(f"mllp: source: closing connection: mllp shutdown")
