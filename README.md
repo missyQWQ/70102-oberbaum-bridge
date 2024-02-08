@@ -32,37 +32,42 @@ creatine_results = {
 }
 ```
 ## Data Processing
-data_combination_dfAndDict(DataFrame, dict): Receive a new record, check and update the history database, then return only the updated or newly added records.
+1. data_combination_dfAndDict(df, new_data_dict)
+Given database(DataFrame) and newly received record(dict), return a new DataFrame contains all the information about that queried patient.
+2. data_combination_receive_blood_test(df, mrn, record)
+Receive a new blood test record, tell if the patient if already exist in the database or not,
+- if exist, update database with the newly received record and return this patient's basic information as well as all blood test records
+- if not exist, insert this new blood record together with this patient's basic information to the database and return them
+3. data_combination_admit_patient(df, mrn, record)
+Receive a patient admitting record, tell if the patient if already exist in the database or not,
+- if exist, return this patient's basic information as well as all blood test records
+- if not exist, insert this patient's basic information to the database and return them
 
-* History Database Format
+0. History Database Format
 ```
 mrn  |creatinine_date_0    |creatinine_result_0|creatinine_date_1|creatinine_result_1|...
 16318|'2024-01-01 06:12:00'|       16.31       |       NAN       |        NAN        |...
 ```
-1. Update exist record
+1. Admit a patient
+```
+# Input
+admit_patient = {16318: [25, 'f']}
+# Output
+mrn  |creatinine_date_0    |creatinine_result_0|creatinine_date_1|creatinine_result_1|...
+16318|'2024-01-01 06:12:00'|       16.31       |       NAN       |        NAN        |...
+```
+2. Add a record
 ```
 # Input format
-exist_patient = {
-    16318: [25, 'f', '2024-03-30 13:33:00', 33.33]
-}
+add_record = {16318: [25, 'f', '2024-03-30 13:33:00', 33.33]}
 # Output format
 mrn  |age|sex|creatinine_date_0    |creatinine_result_0|creatinine_date_1    |creatinine_result_1|...
 16318|25 |'f'|'2024-01-01 06:12:00'|       16.31       |'2024-03-30 13:33:00'|       33.33       |...
 ```
-2. Add new record
+3. Add multiple records
 ```
 # Input format
-new_patient = {
-    1111: [30, 'm', '2024-01-11 11:11:00', 11.11]
-}
-# Output format
-mrn |age|sex|creatinine_date_0    |creatinine_result_0|creatinine_date_1|creatinine_result_1|...
-1111|30 |'m'|'2024-01-11 11:11:00'|       11.11       |       NAN       |        NAN        |...
-```
-3. Update one or multiple exist records and/or add one or multiple new records
-```
-# Input format
-exist_and_new_patient = {
+add_records = {
     16318: [25, 'f', '2024-03-30 13:33:00', 33.33],
     1111: [30, 'm', '2024-01-11 11:11:00', 11.11]
 }
