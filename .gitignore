@@ -65,3 +65,5 @@ Temporary Items
 
  __pycache__*
 .idea
+__pycache__/
+*.pyc

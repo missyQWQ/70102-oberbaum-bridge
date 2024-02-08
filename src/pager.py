@@ -23,14 +23,14 @@ class Pager:
     async def open_session(self):
         if self.session is None or self.session.closed:
             self.session = aiohttp.ClientSession()
-            print("Session Opened!")
+            # print("Session Opened!")
         else:
             print("Session Already Opened!")
 
     async def close_session(self):
         if self.session is not None and not self.session.closed:
             await self.session.close()
-            print("Session Closed!")
+            # print("Session Closed!")
         else:
             print("Session Already Closed? Is this expected???")
 
@@ -42,7 +42,7 @@ class Pager:
             except Exception as e:
                 print(f"Unidentified MRN:{MRN}")
                 raise Exception("Pager: Probably broken data?")
-            print(f"AKI detected for {MRN}, send message to pager.")
+            # print(f"AKI detected for {MRN}, send message to pager.")
             await self.post(str(MRN))
 
         elif label != 'n':
@@ -54,7 +54,7 @@ class Pager:
             async with self.session.post(self.url, data=data) as response:
                 # Check Response!
                 if response.status == 200:
-                    print(f"Pager: success: {response.status} for data {data}")
+                    # print(f"Pager: success: {response.status} for data {data}")
                     return await response.text()
                 else:
                     print(f"Error: server returns {response.status} for data {data}")
