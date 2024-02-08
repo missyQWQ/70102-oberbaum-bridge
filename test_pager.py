@@ -1,7 +1,9 @@
 import pytest
 import pytest_asyncio
 from aiohttp import web
-from pager import Pager
+# import sys 
+# sys.path.append("../..")
+from src.pager import Pager
 
 
 @pytest_asyncio.fixture
