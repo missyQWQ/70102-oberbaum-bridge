@@ -1,8 +1,9 @@
 FROM ubuntu:jammy
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -yq install python3
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get -yq install python3-pip
-COPY /src/simulator.py /simulator/
-WORKDIR /simulator
+# uncomment for test
+# COPY /src/simulator.py /simulator/
+# WORKDIR /simulator
 COPY /src/messages.mllp /data/
 EXPOSE 8440
 EXPOSE 8441
@@ -28,5 +29,5 @@ WORKDIR /model/
 RUN echo "$(ls -la )"
 RUN pytest
 # uncomment for test
-CMD /simulator/simulator.py --messages=/data/messages.mllp
-# CMD python3 /model/main.py --MLLP_ADDRESS=$MLLP_ADDRESS --PAGER_ADDRESS=$PAGER_ADDRESS
+# CMD python3 /simulator/simulator.py --messages=/data/messages.mllp
+CMD python3 /model/main.py --MLLP_ADDRESS=$MLLP_ADDRESS --PAGER_ADDRESS=$PAGER_ADDRESS
