@@ -50,7 +50,7 @@ def data_combination_dfAndDict(df, new_data_dict):
         
         updated_or_newly_added_record = pd.concat([updated_or_newly_added_record, df[df['mrn'] == mrn]])
     
-    return updated_or_newly_added_record, df
+    return updated_or_newly_added_record
 
 def main():
     admit_patient_exist = {963167: [10, 'm']}
@@ -64,27 +64,27 @@ def main():
     df = history_data_df.copy()
     
     # Admit a patient(has history) to the hospital -> Return this patient's basic info & history blood test records
-    df_admit_exist, df = data_combination_dfAndDict(df, admit_patient_exist)
+    df_admit_exist = data_combination_dfAndDict(df, admit_patient_exist)
     print('Admitting 963167(has history). Here is the return:')
     print(df_admit_exist)
 
     # Admit a patient(new, no history) to the hospital -> Return only this patient's basic info
-    df_admit_new, df = data_combination_dfAndDict(df, admit_patient_new)
+    df_admit_new = data_combination_dfAndDict(df, admit_patient_new)
     print('Admitting 1111(new to the hospital, no history). Here is the return:')
     print(df_admit_new)
 
     # Receive blood test for patient(new, no history) -> Return this patient's basic info & newly added blood test records
-    df_add_new, df = data_combination_dfAndDict(df, new_patient)
+    df_add_new = data_combination_dfAndDict(df, new_patient)
     print('Receiving 2222(new to the hospital, no history) blood test result. Here is the return:')
     print(df_add_new)
 
     # Receive blood test for patient(has history) -> Return this patient's basic info & all blood test records
-    df_update_exist, df = data_combination_dfAndDict(df, exist_patient)
+    df_update_exist = data_combination_dfAndDict(df, exist_patient)
     print('Receiving 963167(has history) new blood test result. Here is the return:')
     print(df_update_exist)
 
     # Receive blood test for patients(new, no history & has history) -> Return correspondingly 
-    df_update_exist_and_add_new, df = data_combination_dfAndDict(df, exist_and_new_patient)
+    df_update_exist_and_add_new = data_combination_dfAndDict(df, exist_and_new_patient)
     print('Receiving 1111(now has history) and 3333(new to the hospital, no history) blood test result. Here is the return:')
     print(df_update_exist_and_add_new)
 
