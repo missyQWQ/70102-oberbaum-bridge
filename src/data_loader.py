@@ -1,14 +1,10 @@
-import argparse
-import asyncio
 import socket
-import threading
 import time
 from datetime import datetime
 from pager import *
 from data_processing import data_combination_dfAndDict
 from model_feature_construction import preprocess_features
-from run_model import Model, run_model
-import pandas as pd
+from run_model import Model
 
 VERSION = "0.0.0"
 MLLP_BUFFER_SIZE = 1024
@@ -148,20 +144,3 @@ def parse_mllp_messages(buffer):
                 expect = MLLP_CARRIAGE_RETURN
         i += 1
     return messages, buffer[consumed:]
-
-
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--mllp", default=8440, type=int, help="Port on which to replay HL7 messages via MLLP")
-    flags = parser.parse_args()
-    shutdown_mllp = threading.Event()
-    t = threading.Thread(target=run_mllp_client, args=("0.0.0.0", flags.mllp, shutdown_mllp), daemon=True)
-
-    t.start()
-    t.join()
-    # run_mllp_client("0.0.0.0", flags.mllp, shutdown_mllp)
-    print("Work Done!!!!!")
-
-
-if __name__ == "__main__":
-    main()

@@ -23,14 +23,14 @@ class Pager:
     async def open_session(self):
         if self.session is None or self.session.closed:
             self.session = aiohttp.ClientSession()
-            print("Session Opened!")
+            # print("Session Opened!")
         else:
             print("Session Already Opened!")
 
     async def close_session(self):
         if self.session is not None and not self.session.closed:
             await self.session.close()
-            print("Session Closed!")
+            # print("Session Closed!")
         else:
             print("Session Already Closed? Is this expected???")
 
