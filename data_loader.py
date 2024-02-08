@@ -25,7 +25,7 @@ raw_data = []
 admitted_patient = {}
 discharged_patient = []
 creatine_results = {}
-
+paged_patient = []
 
 async def send_message(pager, message):
     await pager.open_session()
@@ -43,10 +43,11 @@ def parse_hl7message(record):
             age = (current_date.year - birthdate.year -
                    ((current_date.month, current_date.day) < (birthdate.month, birthdate.day)))
             admitted_patient[pid_record[3]] = [age, pid_record[8].lower()]
+            return {pid_record[3]:[age, pid_record[8].lower()]}
         else:
             pid_record = further_record[1].split('|')
             discharged_patient.append(pid_record[3])
-        return None
+            return None
     else:
         pid_record = further_record[1].split('|')
         obr_record = further_record[2].split('|')
@@ -81,11 +82,15 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
 
             if result is not None:
                 raw = data_combination_dfAndDict(history, result)
-                feature = preprocess_features(raw)
-                output = model.run_model(feature)
-                output = (output[0], [output[1].strip("[]").strip("'")][0])
-                if output[1] == 'y':
-                    asyncio.run(send_message(http_pager, output))
+                if raw is not None:
+                    feature = preprocess_features(raw)
+                    output = model.run_model(feature)
+                    output = (output[0], [output[1].strip("[]").strip("'")][0])
+                    if output[1] == 'y':
+                        if list(result.keys())[0] not in paged_patient:
+                            asyncio.run(send_message(http_pager, output))
+                            paged_patient.append(list(result.keys())[0])
+
             count += 1
             if count % 100 == 0:
                 print(count)
