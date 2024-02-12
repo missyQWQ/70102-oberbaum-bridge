@@ -116,11 +116,7 @@ def run_mllp_client(host, port, shutdown_mllp, sex_encoder, aki_encoder, clf_mod
             print(f"Successfully connected to {host}:{port}")
             serve_mllp_dataloader(s, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager, history)
         except Exception as e:
-            count += 1
-            if count >= 10:
-                shutdown_mllp.set()
-            print("connect again")
-            time.sleep(2)
+            print("fail to connect TCP->connect again")
             continue
 
     print("mllp: graceful shutdown")
