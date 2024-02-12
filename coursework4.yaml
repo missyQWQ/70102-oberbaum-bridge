@@ -29,11 +29,13 @@ spec:
       containers:
       - name: aki-detection
         image: imperialswemlsspring2024.azurecr.io/coursework4-oberbaum
-        command: ["/model/main.py"]
+        command: ["/bin/sh", "-c"]
         args:
-        - "--history=/hospital-history/history.csv"
-        - "--MLLP_ADDRESS=$MLLP_ADDRESS"
-        - "--PAGER_ADDRESS=$PAGER_ADDRESS"
+        - >
+          /model/main.py
+          --history=/hospital-history/history.csv
+          --MLLP_ADDRESS=$MLLP_ADDRESS
+          --PAGER_ADDRESS=$PAGER_ADDRESS
         env:
         - name: MLLP_ADDRESS
           value: oberbaum-simulator.hospital:8440
