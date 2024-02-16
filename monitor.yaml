@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: messages-received
+  namespace: oberbaum
+spec:
+  ports:
+  - port: 8440
+    targetPort: 8440
+    protocol: TCP
+    name: messages-received-8440
+  selector:
+    app: aki-detection
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pages-sent
+  namespace: oberbaum
+spec:
+  ports:
+  - port: 8441
+    targetPort: 8441
+    protocol: TCP
+    name: pages-sent-8441
+  selector:
+    app: aki-detection
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: messages-received-monitor
+  namespace: oberbaum
+spec:
+  selector:
+    matchLabels:
+      app: aki-detection
+  namespaceSelector:
+    matchNames:
+    - oberbaum
+  endpoints:
+  - port: messages-received-8440
+    path: /metrics
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pages-sent-monitor
+  namespace: oberbaum
+spec:
+  selector:
+    matchLabels:
+      app: aki-detection
+  namespaceSelector:
+    matchNames:
+    - oberbaum
+  endpoints:
+  - port: pages-sent-8441
+    path: /metrics
