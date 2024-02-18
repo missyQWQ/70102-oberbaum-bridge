@@ -11,5 +11,5 @@ spec:
     matchNames:
     - oberbaum
   endpoints:
-  - port: metrics  # 这里引用了Service中定义的端口名称
+  - port: metrics
     path: /metrics
