@@ -17,6 +17,11 @@ metadata:
   name: aki-detection
   namespace: oberbaum
 spec:
+  ports:
+    - name: metrics  # 这里是端口的自定义名称
+      port: 8440
+      targetPort: 8440
+      protocol: TCP
   replicas: 1
   selector:
     matchLabels:
@@ -41,6 +46,10 @@ spec:
           value: oberbaum-simulator.hospital:8440
         - name: PAGER_ADDRESS
           value: oberbaum-simulator.hospital:8441
+        ports:
+          - name: metrics
+            containerPort: 8440
+            protocol: TCP
         volumeMounts:
           - mountPath: "/hospital-history"
             name: hospital-history

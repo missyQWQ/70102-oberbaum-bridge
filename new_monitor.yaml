@@ -1,0 +1,15 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: aki-detection-monitor
+  namespace: oberbaum
+spec:
+  selector:
+    matchLabels:
+      app: aki-detection
+  namespaceSelector:
+    matchNames:
+    - oberbaum
+  endpoints:
+  - port: metrics  # 这里引用了Service中定义的端口名称
+    path: /metrics

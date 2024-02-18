@@ -5,3 +5,4 @@ pytest
 aiohttp~=3.8.5
 pytest-asyncio~=0.23.4
 pytest-aiohttp~=1.0.5
+prometheus_client == 0.14.1
