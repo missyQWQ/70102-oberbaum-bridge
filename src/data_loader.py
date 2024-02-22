@@ -24,10 +24,7 @@ admitted_patient = {}
 discharged_patient = []
 creatine_results = {}
 paged_patient = []
-positive_detect = 0
-negative_detect = 0
-request_count = 0
-confusion_matrix = {'TP':0, 'FP':0, 'TN':0, 'FN':0}
+
 
 async def send_message(pager, message):
     await pager.open_session()
@@ -87,37 +84,13 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
                 r = raw
                 if not math.isnan(raw.iloc[0]['creatinine_result_0']):
                     feature = preprocess_features(raw)
-                    #output = model.run_model(feature)
-                    #output = (output[0], [output[1].strip("[]").strip("'")][0])
-                    mrn, timestamp, svm_prediction, nhs_prediction = model.run_model(feature)
-                    if request_count > 100:
-                        request_count = 0
-                        positive_detect = 0
-                        negative_detect = 0
-                    request_count += 1
-                    if nhs_prediction == 'y':
-                        if svm_prediction == 'y':
-                            confusion_matrix['TP'] += 1
-                            positive_detect += 1
-                            if mrn not in paged_patient:
-                                asyncio.run(send_message(http_pager, mrn))
-                                print(mrn, ', ', timestamp)
-                                paged_patient.append(mrn)
-                        else:
-                            confusion_matrix['NP'] += 1
-                            negative_detect += 1
-                    else:
-                        negative_detect += 1
-                        if svm_prediction == 'y':
-                            confusion_matrix['FN'] += 1
-                        else:
-                            confusion_matrix['TN'] += 1
-
-                    """if output[1] == 'y':
+                    output = model.run_model(feature)
+                    output = (output[0], [output[1].strip("[]").strip("'")][0])
+                    if output[1] == 'y':
                         if list(result.keys())[0] not in paged_patient:
                             asyncio.run(send_message(http_pager, output))
                             print(list(result.keys())[0], result[list(result.keys())[0]][2])
-                            paged_patient.append(list(result.keys())[0])"""
+                            paged_patient.append(list(result.keys())[0])
 
 
             mllp = bytes(chr(MLLP_START_OF_BLOCK), "ascii")
