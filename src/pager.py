@@ -1,6 +1,6 @@
 import aiohttp
 import asyncio
-
+from datetime import datetime
 
 async def run_http_pager(pager):
     await pager.open_session()
@@ -35,15 +35,17 @@ class Pager:
             print("Session Already Closed? Is this expected???")
 
     async def parse(self, res):
-        (MRN, label) = res
+        (MRN, datetime, label) = res
+        timestamp = None
         if label == 'y':
             try:
                 mrn_int = int(MRN)
+                timestamp = datetime.strftime('%Y%m%d%H%M')
             except Exception as e:
-                print(f"Unidentified MRN:{MRN}")
+                print(f"Unidentified MRN:{MRN}, timestamp:{timestamp}")
                 raise Exception("Pager: Probably broken data?")
             # print(f"AKI detected for {MRN}, send message to pager.")
-            await self.post(str(MRN))
+            await self.post(str(MRN) + "," + timestamp)
 
         elif label != 'n':
             print("Pager: Probably broken data?")
@@ -54,7 +56,7 @@ class Pager:
             async with self.session.post(self.url, data=data) as response:
                 # Check Response!
                 if response.status == 200:
-                    # print(f"Pager: success: {response.status} for data {data}")
+                    print(f"Pager: success: {response.status} for data {data}")
                     return await response.text()
                 else:
                     print(f"Error: server returns {response.status} for data {data}")
