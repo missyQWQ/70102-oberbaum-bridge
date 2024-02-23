@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import argparse
+import os
+
 from data_loader import run_mllp_client
 from pager import *
 import pandas as pd
@@ -38,6 +40,7 @@ def save_variables(filename, variables):
 
 
 def signal_handler(sig, frame):
+    get_logger(__name__).critical(f'{sig} received, dump state')
     print(f'{sig} received, graceful shutdown!!!!!!!!!!!')
     state = data_provider
     save_variables('/state/state.pkl', state)
@@ -53,6 +56,7 @@ def signal_handler(sig, frame):
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
+
     parser = argparse.ArgumentParser()
     parser.add_argument("--history", default="history.csv", help="History Creatine Record to be used for predictions")
     parser.add_argument("--MLLP_ADDRESS", default='0.0.0.0:8440',
@@ -77,6 +81,16 @@ if __name__ == "__main__":
         state_data = DataProvider()
         history_data_df = pd.read_csv(flags.history)
         state_data.set_history(history_data_df)
+    if os.path.exists('/state/state.pkl'):
+        get_logger(__name__).critical('Try to recover from previous state!!!')
+        print("Loading state....")
+        load_state()
+    else:
+        print("Loading data....")
+        history_data_df = pd.read_csv(flags.history)
+        df = history_data_df.copy()
+        data_provider.set_history(df)
+        get_logger(__name__).info('Data loaded')
 
     sex_encoder = None
     aki_encoder = None
@@ -88,12 +102,6 @@ if __name__ == "__main__":
     with open(flags.clf_model, "rb") as file:
         clf_model = pickle.load(file)
     print("Cached, Ready to run server")
+    get_logger(__name__).info("Cached, Ready to run server")
+    main(data_provider, flags.MLLP_ADDRESS, flags.PAGER_ADDRESS, sex_encoder, aki_encoder, clf_model)
 
-    aki_model = EnsembleModel(sex_encoder, aki_encoder, clf_model)
-    main(state_data, flags.MLLP_ADDRESS, flags.PAGER_ADDRESS, aki_model)
-
-"""print('Application is running...')
-while True:
-    # 模拟应用程序长时间运行
-    time.sleep(1)
-"""
