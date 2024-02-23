@@ -71,6 +71,7 @@ def parse_hl7message(record, state):
 
 
 def serve_mllp_dataloader(client, aki_model, http_pager, state):
+    log_flag = True
     buffer = b""
     r = None
     state = DataProvider()
@@ -85,6 +86,7 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
                 received, buffer = parse_mllp_messages(buffer)
             msg = received[0].decode('ascii')
             result = parse_hl7message(msg, state)
+            log_flag = True
 
             if result is not None:
                 raw = data_combination_dfAndDict(state.get_history(), result)
@@ -106,21 +108,28 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
         except Exception as e:
             print(f"mllp: source: closing connection->{e}")
             print(r)
-            get_logger(__name__).warning(f'mllp: source: closing connection->{e}')
+            if log_flag:
+                get_logger(__name__).warning(f'mllp: source: closing connection->{e}')
+            log_flag = False
             break
     client.close()
 
 
 def run_mllp_client(host, port, aki_model, http_pager, state):
+    log_flag = True
     while True:
         try:
             # Create a socket object using IPv4 and TCP protocol
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((host, port))
+            get_logger(__name__).info(f"Successfully connected to {host}:{port}")
             print(f"Successfully connected to {host}:{port}")
+            log_flag = True
             serve_mllp_dataloader(s, aki_model, http_pager, state)
         except Exception as e:
-            get_logger(__name__).warning(f'fail to connect TCP->connect again')
+            if log_flag:
+                get_logger(__name__).warning(f'fail to connect TCP->connect again')
+                log_flag = False
             print("fail to connect TCP->connect again")
             continue
 
