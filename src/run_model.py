@@ -1,7 +1,8 @@
 import pandas as pd
 from sklearn import preprocessing
 from sklearn.ensemble import HistGradientBoostingClassifier
-#import src.nhs_algorithm as nhs
+import nhs_algorithm as nhs
+from datetime import datetime
 
 class Model():
     def __init__(self, sex_encoder, aki_encoder, clf_model):
@@ -41,31 +42,35 @@ def run_model(data, model, sex_encoder, aki_encoder):
     # Return the tuple of (MRN, prediction)
     return (MRN, aki_result)
 
-# class EnsembleModel():
-#     """ So we can return both our gradient boost classifier and the NHS algo outcome"""
-#     def __init__(self, sex_encoder, aki_encoder, clf_model):
-#         self.sex_encoder = sex_encoder
-#         self.aki_encoder = aki_encoder
-#         self.clf_model = clf_model
+class EnsembleModel():
+    """ So we can return both our gradient boost classifier and the NHS algo outcome"""
+    def __init__(self, sex_encoder, aki_encoder, clf_model):
+        self.sex_encoder = sex_encoder
+        self.aki_encoder = aki_encoder
+        self.clf_model = clf_model
     
-#     def ensemble_model(self, data):
-#         # Encode the sex
-#         data['sex'] = self.sex_encoder.fit_transform(data['sex'])
+    def run_ensemble_model(self, data):
+        # Encode the sex
+        data['sex'] = self.sex_encoder.fit_transform(data['sex'])
 
-#         # Make a prediction
-#         X = data.drop(['mrn'], axis=1)
-#         prediction = pd.Series(self.clf_model.predict(X.values))
+        # Make a prediction
+        X = data.drop(['mrn'], axis=1)
+        prediction = pd.Series(self.clf_model.predict(X.values))
 
-#         # Encode aki prediction
-#         aki_result = str(self.aki_encoder.inverse_transform(prediction))
+        # Encode aki prediction
+        aki_result = str(self.aki_encoder.inverse_transform(prediction))
         
-#         # Also get the prediction from the NHS algorithm
-#         nhs_result = nhs.run_nhs_algorithm(data)
+        # Also get the prediction from the NHS algorithm
+        nhs_result = nhs.run_nhs_algorithm(data)
         
-#         MRN = int(data.iloc[0, 0])
+        MRN = int(data.iloc[0, 0])
+        
+        ts = datetime.now()
+        ts = datetime.timestamp(ts)
+        dt_object = datetime.fromtimestamp(ts)
 
-#         # Return the tuple of (MRN, cls_prediction, nhs_prediction)
-#         return (MRN, aki_result, nhs_result)
+        # Return the tuple of (MRN, cls_prediction, nhs_prediction)
+        return (MRN, dt_object, aki_result, nhs_result)
         
 
 
