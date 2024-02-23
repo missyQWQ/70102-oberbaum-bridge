@@ -33,6 +33,7 @@ async def send_message(pager, message, state):
             log_flag = True
             break
         except IOError as e:
+            http_error_received.inc()
             state.set_http_error_count()
             if log_flag:
                 get_logger(__name__).warning(e)
@@ -97,8 +98,14 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
             log_flag = True
 
             state.set_request_count()
+            messages_received.inc()
             state.set_message_count()
             if result is not None:
+                values = list(result.values())
+                value = values[0]
+                if len(value) == 4:
+                    results_distribution.observe(value[-1])
+                tests_received.inc()
                 state.set_test_count()
                 raw = data_combination_dfAndDict(state.get_history(), result)
                 if not math.isnan(raw.iloc[0]['creatinine_result_0']):
@@ -106,6 +113,7 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
                     MRN, aki_result, nhs_result = aki_model.run_ensemble_model(feature)
                     state.set_confusion_matrix(aki_result, nhs_result)
                     if aki_result == 'y':
+                        positive_detection.inc()
                         state.set_positive_detect()
                         if MRN not in state.get_paged_patient():
                             time = result[int(MRN)][2]
@@ -142,6 +150,7 @@ def run_mllp_client(host, port, aki_model, http_pager, state):
             log_flag = True
             serve_mllp_dataloader(s, aki_model, http_pager, state)
         except Exception as e:
+            reconnection_detection.inc()
             state.set_reconnection_error_count()
             if log_flag:
                 get_logger(__name__).warning(f'fail to connect TCP->connect again')
