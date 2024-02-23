@@ -29,6 +29,7 @@ async def send_message(pager, message, state):
             await pager.open_session()
             await pager.parse(message)
             await pager.close_session()
+            log_flag = True
             break
         except IOError as e:
             state.set_http_error_count()
@@ -39,6 +40,10 @@ async def send_message(pager, message, state):
                 print(f"Trying to reconnect... Attempt: {state.get_http_error_count()}")
                 log_flag = False
         except ValueError as e:
+            if log_flag:
+                get_logger(__name__).error(e)
+                print(e)
+                log_flag = False
             break
 
 
