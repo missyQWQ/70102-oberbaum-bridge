@@ -119,7 +119,7 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
             print(r)
             if log_flag:
                 get_logger(__name__).warning(f'mllp: source: closing connection->{e}')
-            log_flag = False
+                log_flag = False
             break
     client.close()
 
