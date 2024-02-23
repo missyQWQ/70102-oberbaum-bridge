@@ -8,6 +8,8 @@ from run_model import Model
 import numpy as np
 import math
 
+from src.log_provider import get_logger
+
 VERSION = "0.0.0"
 MLLP_BUFFER_SIZE = 1024
 MLLP_TIMEOUT_SECONDS = 10
@@ -100,9 +102,11 @@ def serve_mllp_dataloader(client, shutdown_mllp, sex_encoder, aki_encoder, clf_m
         except Exception as e:
             print(f"mllp: source: closing connection->{e}")
             print(r)
+            get_logger(__name__).warning(f'mllp: source: closing connection->{e}')
             break
     else:
         print(f"mllp: source: closing connection: mllp shutdown")
+        get_logger(__name__).warning(f'mllp: source: closing connection: mllp shutdown')
     client.close()
 
 
@@ -116,10 +120,12 @@ def run_mllp_client(host, port, shutdown_mllp, sex_encoder, aki_encoder, clf_mod
             print(f"Successfully connected to {host}:{port}")
             serve_mllp_dataloader(s, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager, history)
         except Exception as e:
+            get_logger(__name__).warning(f'fail to connect TCP->connect again')
             print("fail to connect TCP->connect again")
             continue
 
     print("mllp: graceful shutdown")
+    get_logger(__name__).warning(f'mllp: graceful shutdown')
 
 
 def parse_mllp_messages(buffer):
@@ -130,6 +136,7 @@ def parse_mllp_messages(buffer):
     while i < len(buffer):
         if expect is not None:
             if buffer[i] != expect:
+                get_logger(__name__).error(f"source: bad MLLP encoding: want {hex(expect)}, found {hex(buffer[i])}")
                 raise Exception(f"source: bad MLLP encoding: want {hex(expect)}, found {hex(buffer[i])}")
             if expect == MLLP_START_OF_BLOCK:
                 expect = None
