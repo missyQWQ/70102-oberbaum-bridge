@@ -22,25 +22,23 @@ HL7_MSA_ACK_CODE_ACCEPT = b"AA"
 ACK = b'MSH|^~\\&|||||20240129093837||ACK|||2.5\rMSA|AA'
 
 
-async def send_message(pager, message):
+async def send_message(pager, message, state):
     log_flag = True
     while True:
         try:
             await pager.open_session()
             await pager.parse(message)
             await pager.close_session()
-            log_flag = True
             break
         except IOError as e:
+            state.set_http_error_count()
             if log_flag:
                 get_logger(__name__).warning(e)
                 print(e)
-            log_flag = False
+                print(f"HTTP connection failed: {e}")
+                print(f"Trying to reconnect... Attempt: {state.get_http_error_count()}")
+                log_flag = False
         except ValueError as e:
-            if log_flag:
-                get_logger(__name__).error(e)
-                print(e)
-            log_flag = False
             break
 
 
@@ -92,18 +90,25 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
             result = parse_hl7message(msg, state)
             log_flag = True
 
+            state.set_request_count()
+            state.set_message_count()
             if result is not None:
+                state.set_test_count()
                 raw = data_combination_dfAndDict(state.get_history(), result)
                 if not math.isnan(raw.iloc[0]['creatinine_result_0']):
                     feature = preprocess_features(raw)
                     MRN, aki_result, nhs_result = aki_model.run_ensemble_model(feature)
+                    state.set_confusion_matrix(aki_result, nhs_result)
                     if aki_result == 'y':
+                        state.set_positive_detect()
                         if MRN not in state.get_paged_patient():
                             time = result[int(MRN)][2]
-                            asyncio.run(send_message(http_pager, (MRN, time)))
+                            asyncio.run(send_message(http_pager, (MRN, time), state))
                             print(f'MRN: {MRN}, time: {time}')
                             # paged_patient.append(list(result.keys())[0])
                             state.set_paged_patient(MRN)
+                    else:
+                        state.set_negative_detect()
 
             mllp = bytes(chr(MLLP_START_OF_BLOCK), "ascii")
             mllp += ACK
@@ -131,10 +136,11 @@ def run_mllp_client(host, port, aki_model, http_pager, state):
             log_flag = True
             serve_mllp_dataloader(s, aki_model, http_pager, state)
         except Exception as e:
+            state.set_reconnection_error_count()
             if log_flag:
                 get_logger(__name__).warning(f'fail to connect TCP->connect again')
                 log_flag = False
-            print("fail to connect TCP->connect again")
+                print("fail to connect TCP->connect again")
             continue
 
 
