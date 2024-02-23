@@ -8,7 +8,6 @@ from run_model import Model
 import numpy as np
 import math
 from data_provider import DataProvider
-
 from src.log_provider import get_logger
 
 VERSION = "0.0.0"
@@ -24,19 +23,24 @@ ACK = b'MSH|^~\\&|||||20240129093837||ACK|||2.5\rMSA|AA'
 
 
 async def send_message(pager, message):
-    attempt = 0
+    log_flag = True
     while True:
         try:
             await pager.open_session()
             await pager.parse(message)
             await pager.close_session()
+            log_flag = True
             break
         except IOError as e:
-            attempt += 1
-            print(f"HTTP connection failed: {e}")
-            print(f"Trying to reconnect... Attempt: {attempt}")
+            if log_flag:
+                get_logger(__name__).warning(e)
+                print(e)
+            log_flag = False
         except ValueError as e:
-            print(f"Pager {e} found")
+            if log_flag:
+                get_logger(__name__).error(e)
+                print(e)
+            log_flag = False
             break
 
 
@@ -132,9 +136,6 @@ def run_mllp_client(host, port, aki_model, http_pager, state):
                 log_flag = False
             print("fail to connect TCP->connect again")
             continue
-
-    print("mllp: graceful shutdown")
-    get_logger(__name__).warning(f'mllp: graceful shutdown')
 
 
 def parse_mllp_messages(buffer):
