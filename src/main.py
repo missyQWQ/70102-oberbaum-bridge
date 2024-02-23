@@ -6,6 +6,12 @@ import pandas as pd
 import pickle
 import multiprocessing
 import warnings
+from data_provider import DataProvider
+import signal
+import sys
+import time
+
+data_provider = DataProvider()
 
 
 def main(history_data, mllp, pager, sex_encoder, aki_encoder, clf_model):
@@ -20,7 +26,33 @@ def main(history_data, mllp, pager, sex_encoder, aki_encoder, clf_model):
                     history_data)
 
 
+def save_variables(filename, variables):
+    with open(filename, 'wb') as file:
+        pickle.dump(variables, file)
+
+
+# Reload requested data variable to file
+def load_variables(filename):
+    with open(filename, 'rb') as file:
+        return pickle.load(file)
+
+
+def signal_handler(sig, frame):
+    print(f'{sig} received, graceful shutdown!!!!!!!!!!!')
+    state = data_provider
+    save_variables('/state/state.pkl', state)
+    sys.exit(0)
+
+
+def load_state():
+    global data_provider
+    data_provider = load_variables('/state/state.pkl')
+    print(f"Data loaded!!!!!!!")
+
+
 if __name__ == "__main__":
+    signal.signal(signal.SIGTERM, signal_handler)
+    signal.signal(signal.SIGINT, signal_handler)
     parser = argparse.ArgumentParser()
     parser.add_argument("--history", default="history.csv", help="History Creatine Record to be used for predictions")
     parser.add_argument("--MLLP_ADDRESS", default='0.0.0.0:8440',
@@ -50,3 +82,8 @@ if __name__ == "__main__":
         clf_model = pickle.load(file)
     print("Cached, Ready to run server")
     main(df, flags.MLLP_ADDRESS, flags.PAGER_ADDRESS, sex_encoder, aki_encoder, clf_model)
+
+print('Application is running...')
+while True:
+    # 模拟应用程序长时间运行
+    time.sleep(1)
