@@ -14,7 +14,9 @@ import sys
 import time
 import os
 from run_model import EnsembleModel
+
 data_provider = DataProvider()
+from log_provider import get_logger
 
 
 def main(state_data, mllp, pager, aki_model):
@@ -75,21 +77,15 @@ if __name__ == "__main__":
     flags = parser.parse_args()
 
     state_data = None
-    if os.path.exists('state.pkl'):
-        state_data = pickle.load('state.pkl')
-    else:
-        state_data = DataProvider()
-        history_data_df = pd.read_csv(flags.history)
-        state_data.set_history(history_data_df)
     if os.path.exists('/state/state.pkl'):
         get_logger(__name__).critical('Try to recover from previous state!!!')
         print("Loading state....")
-        load_state()
+        state_data = pickle.load('state.pkl')
     else:
         print("Loading data....")
+        state_data = DataProvider()
         history_data_df = pd.read_csv(flags.history)
-        df = history_data_df.copy()
-        data_provider.set_history(df)
+        state_data.set_history(history_data_df)
         get_logger(__name__).info('Data loaded')
 
     sex_encoder = None
@@ -104,4 +100,3 @@ if __name__ == "__main__":
     print("Cached, Ready to run server")
     get_logger(__name__).info("Cached, Ready to run server")
     main(data_provider, flags.MLLP_ADDRESS, flags.PAGER_ADDRESS, sex_encoder, aki_encoder, clf_model)
-
