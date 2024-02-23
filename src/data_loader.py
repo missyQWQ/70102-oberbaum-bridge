@@ -8,7 +8,7 @@ from run_model import Model
 import numpy as np
 import math
 from data_provider import DataProvider
-
+from monitor_application import *
 from src.log_provider import get_logger
 
 VERSION = "0.0.0"

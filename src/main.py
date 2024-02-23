@@ -14,25 +14,28 @@ import sys
 import time
 import os
 from run_model import EnsembleModel
-
-data_provider = DataProvider()
+from prometheus_client import start_http_server
 from log_provider import get_logger
 
+state_data = None
 
-def main(state_data, mllp, pager, aki_model):
+
+def main(mllp, pager, aki_model):
     warnings.filterwarnings('ignore', category=FutureWarning)
     http_pager = Pager(f"http://{pager}/page")
 
     ip_address, port_str = mllp.split(":")
     # Convert port string to integer
     port_number = int(port_str)
+    print('Promethus Client Starts')
+    start_http_server(8000)
     print("Server started...")
     run_mllp_client(ip_address, port_number, aki_model, http_pager, state_data)
 
 
-def save_variables(filename, variables):
+def save_variables(filename):
     with open(filename, 'wb') as file:
-        pickle.dump(variables, file)
+        pickle.dump(state_data, file)
 
 
 # Reload requested data variable to file
@@ -44,8 +47,7 @@ def save_variables(filename, variables):
 def signal_handler(sig, frame):
     get_logger(__name__).critical(f'{sig} received, dump state')
     print(f'{sig} received, graceful shutdown!!!!!!!!!!!')
-    state = data_provider
-    save_variables('/state/state.pkl', state)
+    save_variables('/state/state.pkl')
     sys.exit(0)
 
 
@@ -53,7 +55,6 @@ def signal_handler(sig, frame):
     global data_provider
     data_provider = load_variables('/state/state.pkl')
     print(f"Data loaded!!!!!!!")"""
-
 
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, signal_handler)
@@ -76,11 +77,10 @@ if __name__ == "__main__":
 
     flags = parser.parse_args()
 
-    state_data = None
     if os.path.exists('/state/state.pkl'):
         get_logger(__name__).critical('Try to recover from previous state!!!')
         print("Loading state....")
-        state_data = pickle.load('state.pkl')
+        state_data = pickle.load('/state/state.pkl')
     else:
         print("Loading data....")
         state_data = DataProvider()
@@ -98,5 +98,6 @@ if __name__ == "__main__":
     with open(flags.clf_model, "rb") as file:
         clf_model = pickle.load(file)
     print("Cached, Ready to run server")
+    aki_model = EnsembleModel(sex_encoder, aki_encoder, clf_model)
     get_logger(__name__).info("Cached, Ready to run server")
-    main(data_provider, flags.MLLP_ADDRESS, flags.PAGER_ADDRESS, sex_encoder, aki_encoder, clf_model)
+    main(flags.MLLP_ADDRESS, flags.PAGER_ADDRESS, aki_model)
