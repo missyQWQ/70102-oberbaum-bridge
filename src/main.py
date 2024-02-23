@@ -10,20 +10,20 @@ from data_provider import DataProvider
 import signal
 import sys
 import time
-
+import os
+from run_model import EnsembleModel
 data_provider = DataProvider()
 
 
-def main(history_data, mllp, pager, sex_encoder, aki_encoder, clf_model):
+def main(state_data, mllp, pager, aki_model):
     warnings.filterwarnings('ignore', category=FutureWarning)
     http_pager = Pager(f"http://{pager}/page")
-    shutdown_mllp = multiprocessing.Event()
+
     ip_address, port_str = mllp.split(":")
     # Convert port string to integer
     port_number = int(port_str)
     print("Server started...")
-    run_mllp_client(ip_address, port_number, shutdown_mllp, sex_encoder, aki_encoder, clf_model, pager, http_pager,
-                    history_data)
+    run_mllp_client(ip_address, port_number, aki_model, http_pager, state_data)
 
 
 def save_variables(filename, variables):
@@ -32,9 +32,9 @@ def save_variables(filename, variables):
 
 
 # Reload requested data variable to file
-def load_variables(filename):
+"""def load_variables(filename):
     with open(filename, 'rb') as file:
-        return pickle.load(file)
+        return pickle.load(file)"""
 
 
 def signal_handler(sig, frame):
@@ -44,10 +44,10 @@ def signal_handler(sig, frame):
     sys.exit(0)
 
 
-def load_state():
+"""def load_state():
     global data_provider
     data_provider = load_variables('/state/state.pkl')
-    print(f"Data loaded!!!!!!!")
+    print(f"Data loaded!!!!!!!")"""
 
 
 if __name__ == "__main__":
@@ -69,8 +69,15 @@ if __name__ == "__main__":
                         help="URL to send page requests to pager system")
 
     flags = parser.parse_args()
-    history_data_df = pd.read_csv(flags.history)
-    df = history_data_df.copy()
+
+    state_data = None
+    if os.path.exists('state.pkl'):
+        state_data = pickle.load('state.pkl')
+    else:
+        state_data = DataProvider()
+        history_data_df = pd.read_csv(flags.history)
+        state_data.set_history(history_data_df)
+
     sex_encoder = None
     aki_encoder = None
     clf_model = None
@@ -81,9 +88,12 @@ if __name__ == "__main__":
     with open(flags.clf_model, "rb") as file:
         clf_model = pickle.load(file)
     print("Cached, Ready to run server")
-    main(df, flags.MLLP_ADDRESS, flags.PAGER_ADDRESS, sex_encoder, aki_encoder, clf_model)
 
-print('Application is running...')
+    aki_model = EnsembleModel(sex_encoder, aki_encoder, clf_model)
+    main(state_data, flags.MLLP_ADDRESS, flags.PAGER_ADDRESS, aki_model)
+
+"""print('Application is running...')
 while True:
     # 模拟应用程序长时间运行
     time.sleep(1)
+"""

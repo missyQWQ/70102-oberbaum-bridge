@@ -64,13 +64,9 @@ class EnsembleModel():
         nhs_result = nhs.run_nhs_algorithm(data)
         
         MRN = int(data.iloc[0, 0])
-        
-        ts = datetime.now()
-        ts = datetime.timestamp(ts)
-        dt_object = datetime.fromtimestamp(ts)
 
         # Return the tuple of (MRN, cls_prediction, nhs_prediction)
-        return (MRN, dt_object, aki_result, nhs_result)
+        return (MRN, aki_result, nhs_result)
         
 
 
