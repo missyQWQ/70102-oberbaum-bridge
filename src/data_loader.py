@@ -24,9 +24,20 @@ ACK = b'MSH|^~\\&|||||20240129093837||ACK|||2.5\rMSA|AA'
 
 
 async def send_message(pager, message):
-    await pager.open_session()
-    await pager.parse(message)
-    await pager.close_session()
+    attempt = 0
+    while True:
+        try:
+            await pager.open_session()
+            await pager.parse(message)
+            await pager.close_session()
+            break
+        except IOError as e:
+            attempt += 1
+            print(f"HTTP connection failed: {e}")
+            print(f"Trying to reconnect... Attempt: {attempt}")
+        except ValueError as e:
+            print(f"Pager {e} found")
+            break
 
 
 def parse_hl7message(record, state):
