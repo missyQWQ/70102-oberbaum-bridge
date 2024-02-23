@@ -80,7 +80,8 @@ if __name__ == "__main__":
     if os.path.exists('/state/state.pkl'):
         get_logger(__name__).critical('Try to recover from previous state!!!')
         print("Loading state....")
-        state_data = pickle.load('state.pkl')
+        with open('/state/state.pkl', 'rb') as file:
+            state_data = pickle.load(file)
     else:
         print("Loading data....")
         state_data = DataProvider()

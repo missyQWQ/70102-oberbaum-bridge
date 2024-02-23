@@ -24,6 +24,8 @@ COPY /src/sex_encoder_model.pkl /model/
 COPY /tests/test_data_processing.py /model/
 COPY /tests/test_feature_construction.py /model/
 COPY /tests/test_pager.py /model/
+COPY main.sh /model/
+RUN chmod +x /model/main.sh
 RUN pip3 install -r /model/requirements.txt
 WORKDIR /model/
 RUN echo "$(ls -la )"
