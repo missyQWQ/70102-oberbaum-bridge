@@ -53,20 +53,66 @@ class DataProvider:
     def get_request_count(self):
         return self.request_count
 
+    def set_request_count(self):
+        if self.request_count < 100:
+            self.request_count += 1
+        else:
+            self.request_count = 0
+            self.request_count += 1
+
     def get_confusion_matrix(self):
         return self.confusion_matrix
+
+    def set_confusion_matrix(self, aki_prediction, nhs_prediction):
+        if self.request_count == 1:
+            self.confusion_matrix = {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0}
+
+        if nhs_prediction == 'y':
+            if aki_prediction == 'y':
+                self.confusion_matrix['TP'] += 1
+            else:
+                self.confusion_matrix['NP'] += 1
+        else:
+            if aki_prediction == 'y':
+                self.confusion_matrix['FN'] += 1
+            else:
+                self.confusion_matrix['TN'] += 1
 
     def get_message_count(self):
         return self.message_count
 
+    def set_message_count(self):
+        self.message_count += 1
+
+    def get_positive_detect(self):
+        return self.positive_detect
+
+    def set_positive_detect(self):
+        self.positive_detect += 1
+
+    def get_negative_detect(self):
+        return self.negative_detect
+
+    def set_negative_detect(self):
+        self.negative_detect += 1
+
     def get_test_count(self):
         return self.test_count
+
+    def set_test_count(self):
+        self.test_count += 1
 
     def get_http_error_count(self):
         return self.http_error_count
 
+    def set_http_error_count(self):
+        self.http_error_count += 1
+
     def get_reconnection_error_count(self):
         return self.reconnection_error_count
+
+    def set_reconnection_error_count(self):
+        self.reconnection_error_count += 1
 
     def get_test_results(self):
         percentile_25 = np.percentile(self.test_results, 25)
