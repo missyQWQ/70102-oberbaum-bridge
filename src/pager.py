@@ -62,3 +62,5 @@ class Pager:
         except Exception as e:
             print(e)
             print("Pager: network error")
+            raise Exception(f"Network error unhandled:{e}")
+
