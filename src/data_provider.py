@@ -71,7 +71,7 @@ class DataProvider:
             if aki_prediction == 'y':
                 self.confusion_matrix['TP'] += 1
             else:
-                self.confusion_matrix['NP'] += 1
+                self.confusion_matrix['FP'] += 1
         else:
             if aki_prediction == 'y':
                 self.confusion_matrix['FN'] += 1

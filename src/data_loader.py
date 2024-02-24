@@ -83,7 +83,6 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
     log_flag = True
     buffer = b""
     r = None
-    state = DataProvider()
     while True:
         try:
             received = []
@@ -93,10 +92,10 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
                     raise Exception("server closed connection")
                 buffer += r
                 received, buffer = parse_mllp_messages(buffer)
+
             msg = received[0].decode('ascii')
             result = parse_hl7message(msg, state)
             log_flag = True
-
             state.set_request_count()
             messages_received.inc()
             state.set_message_count()
@@ -111,15 +110,13 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
                 if not math.isnan(raw.iloc[0]['creatinine_result_0']):
                     feature = preprocess_features(raw)
                     MRN, aki_result, nhs_result = aki_model.run_ensemble_model(feature)
-                    state.set_confusion_matrix(aki_result, nhs_result)
-                    if aki_result == 'y':
+                    state.set_confusion_matrix(aki_result[0], nhs_result[0])
+                    if aki_result[0] == 'y':
                         positive_detection.inc()
                         state.set_positive_detect()
                         if MRN not in state.get_paged_patient():
                             time = result[int(MRN)][2]
-                            asyncio.run(send_message(http_pager, (MRN, time), state))
-                            print(f'MRN: {MRN}, time: {time}')
-                            # paged_patient.append(list(result.keys())[0])
+                            asyncio.run(send_message(http_pager, (MRN, time, aki_result[0]), state))
                             state.set_paged_patient(MRN)
                     else:
                         state.set_negative_detect()
@@ -130,7 +127,6 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
             client.sendall(mllp)
         except Exception as e:
             print(f"mllp: source: closing connection->{e}")
-            print(r)
             if log_flag:
                 get_logger(__name__).warning(f'mllp: source: closing connection->{e}')
                 log_flag = False

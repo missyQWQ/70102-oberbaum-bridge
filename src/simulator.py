@@ -134,13 +134,13 @@ class PagerRequestHandler(http.server.BaseHTTPRequestHandler):
                 return
             mrn = 0
             try:
-                mrn = int(self.rfile.read(length))
+                mrn = self.rfile.read(length)
             except:
                 print("pager: bad request: no MRN for /page")
                 self.send_response(http.HTTPStatus.BAD_REQUEST, "Bad MRN in body")
                 self.end_headers()
                 return
-            print(f"pager: paging for MRN {mrn}")
+            print(f"pager: paging for MRN TimeStamp {mrn}")
             self.send_response(http.HTTPStatus.OK)
             self.send_header("Content-Type", "text/plain")
             self.end_headers()

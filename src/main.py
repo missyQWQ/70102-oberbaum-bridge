@@ -22,6 +22,7 @@ state_data = None
 
 def main(mllp, pager, aki_model):
     warnings.filterwarnings('ignore', category=FutureWarning)
+    warnings.filterwarnings('ignore', category=RuntimeWarning)
     http_pager = Pager(f"http://{pager}/page")
 
     ip_address, port_str = mllp.split(":")
@@ -47,7 +48,7 @@ def save_variables(filename):
 def signal_handler(sig, frame):
     get_logger(__name__).critical(f'{sig} received, dump state')
     print(f'{sig} received, graceful shutdown!!!!!!!!!!!')
-    save_variables('/state/state.pkl')
+    save_variables('state/state.pkl')
     sys.exit(0)
 
 
@@ -77,10 +78,10 @@ if __name__ == "__main__":
 
     flags = parser.parse_args()
 
-    if os.path.exists('/state/state.pkl'):
+    if os.path.exists('state/state.pkl'):
         get_logger(__name__).critical('Try to recover from previous state!!!')
         print("Loading state....")
-        with open('/state/state.pkl', 'rb') as file:
+        with open('state/state.pkl', 'rb') as file:
             state_data = pickle.load(file)
     else:
         print("Loading data....")

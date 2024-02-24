@@ -58,7 +58,7 @@ class EnsembleModel():
         prediction = pd.Series(self.clf_model.predict(X.values))
 
         # Encode aki prediction
-        aki_result = str(self.aki_encoder.inverse_transform(prediction))
+        aki_result = self.aki_encoder.inverse_transform(prediction)
         
         # Also get the prediction from the NHS algorithm
         nhs_result = nhs.run_nhs_algorithm(data)

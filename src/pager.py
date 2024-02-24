@@ -1,7 +1,7 @@
 import aiohttp
 import asyncio
 from datetime import datetime
-
+from monitor_application import pages_sent, http_error_received
 from src.log_provider import get_logger
 
 
@@ -39,15 +39,15 @@ class Pager:
             print("Session Already Closed? Is this expected???")
 
     async def parse(self, res):
-        (MRN, datetime, label) = res
+        (MRN, time_str, label) = res
         timestamp = None
         if label == 'y':
             try:
                 mrn_int = int(MRN)
-                timestamp = datetime.strftime('%Y%m%d%H%M')
+                time_obj = datetime.strptime(time_str, '%Y-%m-%d %H:%M:%S')
+                timestamp = time_obj.strftime('%Y%m%d%H%M')
             except Exception as e:
                 raise ValueError("Pager: Probably broken data?")
-            # print(f"AKI detected for {MRN}, send message to pager.")
             await self.post(str(MRN) + "," + timestamp)
 
         elif label != 'n':
@@ -58,10 +58,12 @@ class Pager:
             async with self.session.post(self.url, data=data) as response:
                 # Check Response!
                 if response.status == 200:
+                    pages_sent.inc()
                     get_logger(__name__).info(f"Pager: success: {response.status} for data {data}")
                     print(f"Pager: success: {response.status} for data {data}")
                     return await response.text()
                 else:
+                    http_error_received.inc()
                     raise IOError(f"SERVER_SIDE ERR: {response.status}")
 
         except Exception as e:
