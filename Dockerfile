@@ -36,5 +36,4 @@ RUN echo "$(ls -la )"
 # RUN pytest
 RUN chmod +x /model/main.py
 # uncomment for test
-# CMD python3 /simulator/simulator.py --messages=/data/messages.mllp
-CMD /model/main.sh
+CMD python3 /simulator/simulator.py --messages=/data/messages.mllp
