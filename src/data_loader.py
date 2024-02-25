@@ -21,31 +21,35 @@ MLLP_CARRIAGE_RETURN = 0x0d
 HL7_MSA_ACK_CODE_FIELD = 1
 HL7_MSA_ACK_CODE_ACCEPT = b"AA"
 ACK = b'MSH|^~\\&|||||20240129093837||ACK|||2.5\rMSA|AA'
+log_flag_send_message = True
+log_flag_serve_mllp_dataloader = True
+log_flag_run_mllp_client = True
+log_flag_parse_mllp_messages = True
 
 
 async def send_message(pager, message, state):
-    log_flag = True
+    global log_flag_send_message
     while True:
         try:
             await pager.open_session()
             await pager.parse(message)
             await pager.close_session()
-            log_flag = True
+            log_flag_send_message = True
             break
         except IOError as e:
             http_error_received.inc()
             state.set_http_error_count()
-            if log_flag:
+            if log_flag_send_message:
                 get_logger(__name__).warning(e)
                 print(e)
                 print(f"HTTP connection failed: {e}")
                 print(f"Trying to reconnect... Attempt: {state.get_http_error_count()}")
-                log_flag = False
+                log_flag_send_message = False
         except ValueError as e:
-            if log_flag:
+            if log_flag_send_message:
                 get_logger(__name__).error(e)
                 print(e)
-                log_flag = False
+                log_flag_send_message = False
             break
 
 
@@ -80,7 +84,7 @@ def parse_hl7message(record, state):
 
 
 def serve_mllp_dataloader(client, aki_model, http_pager, state):
-    log_flag = True
+    global log_flag_serve_mllp_dataloader
     buffer = b""
     r = None
     while True:
@@ -95,7 +99,6 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
 
             msg = received[0].decode('ascii')
             result = parse_hl7message(msg, state)
-            log_flag = True
             state.set_request_count()
             messages_received.inc()
             state.set_message_count()
@@ -125,17 +128,18 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
             mllp += ACK
             mllp += bytes(chr(MLLP_END_OF_BLOCK) + chr(MLLP_CARRIAGE_RETURN), "ascii")
             client.sendall(mllp)
+            log_flag_serve_mllp_dataloader = True
         except Exception as e:
             print(f"mllp: source: closing connection->{e}")
-            if log_flag:
+            if log_flag_serve_mllp_dataloader:
                 get_logger(__name__).warning(f'mllp: source: closing connection->{e}')
-                log_flag = False
+                log_flag_serve_mllp_dataloader = False
             break
     client.close()
 
 
 def run_mllp_client(host, port, aki_model, http_pager, state):
-    log_flag = True
+    global log_flag_run_mllp_client
     while True:
         try:
             # Create a socket object using IPv4 and TCP protocol
@@ -143,19 +147,20 @@ def run_mllp_client(host, port, aki_model, http_pager, state):
             s.connect((host, port))
             get_logger(__name__).info(f"Successfully connected to {host}:{port}")
             print(f"Successfully connected to {host}:{port}")
-            log_flag = True
             serve_mllp_dataloader(s, aki_model, http_pager, state)
+            log_flag_run_mllp_client = True
         except Exception as e:
             reconnection_detection.inc()
             state.set_reconnection_error_count()
-            if log_flag:
+            if log_flag_run_mllp_client:
                 get_logger(__name__).warning(f'fail to connect TCP->connect again')
-                log_flag = False
+                log_flag_run_mllp_client = False
                 print("fail to connect TCP->connect again")
             continue
 
 
 def parse_mllp_messages(buffer):
+    global log_flag_parse_mllp_messages
     i = 0
     messages = []
     consumed = 0
@@ -163,7 +168,9 @@ def parse_mllp_messages(buffer):
     while i < len(buffer):
         if expect is not None:
             if buffer[i] != expect:
-                get_logger(__name__).error(f"source: bad MLLP encoding: want {hex(expect)}, found {hex(buffer[i])}")
+                if log_flag_parse_mllp_messages:
+                    get_logger(__name__).error(f"source: bad MLLP encoding: want {hex(expect)}, found {hex(buffer[i])}")
+                    log_flag_parse_mllp_messages = False
                 raise Exception(f"source: bad MLLP encoding: want {hex(expect)}, found {hex(buffer[i])}")
             if expect == MLLP_START_OF_BLOCK:
                 expect = None
@@ -176,4 +183,5 @@ def parse_mllp_messages(buffer):
             if buffer[i] == MLLP_END_OF_BLOCK:
                 expect = MLLP_CARRIAGE_RETURN
         i += 1
+    log_flag_parse_mllp_messages = True
     return messages, buffer[consumed:]
