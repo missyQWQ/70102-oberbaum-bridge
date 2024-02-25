@@ -1,6 +1,9 @@
 import socket
 import time
 from datetime import datetime
+
+import pandas as pd
+
 from pager import *
 from data_processing import data_combination_dfAndDict
 from model_feature_construction import preprocess_features
@@ -27,6 +30,7 @@ log_flag_serve_mllp_dataloader = True
 log_flag_run_mllp_client = True
 log_flag_parse_mllp_messages = True
 log_flag_start_client = True
+
 
 async def send_message(pager, message, state):
     global log_flag_send_message
@@ -79,7 +83,8 @@ def parse_hl7message(record, state):
         formatted_datetime = datetime.strptime(datetime_str, '%Y%m%d%H%M%S').strftime('%Y-%m-%d %H:%M:%S')
 
         admitted_patient = state.get_admitted_patient()
-        admitted_patient[pid_record[-1]]
+        if pid_record[-1] not in admitted_patient:
+            admitted_patient[pid_record[-1]] = [pd.NA, pd.NA]
         return {int(pid_record[-1]): [admitted_patient[pid_record[-1]][0], admitted_patient[pid_record[-1]][1],
                                       formatted_datetime, round(float(obx_record[-1]), 2)]}
 
