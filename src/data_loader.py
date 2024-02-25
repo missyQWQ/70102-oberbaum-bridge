@@ -10,6 +10,7 @@ import math
 from data_provider import DataProvider
 from monitor_application import *
 from log_provider import get_logger
+import traceback
 
 VERSION = "0.0.0"
 MLLP_BUFFER_SIZE = 1024
@@ -130,6 +131,7 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
             client.sendall(mllp)
             log_flag_serve_mllp_dataloader = True
         except Exception as e:
+            traceback.print_exc()
             print(f"mllp: source: closing connection->{e}")
             if log_flag_serve_mllp_dataloader:
                 get_logger(__name__).warning(f'mllp: source: closing connection->{e}')
