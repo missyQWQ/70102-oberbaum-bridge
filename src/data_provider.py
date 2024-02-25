@@ -19,6 +19,7 @@ class DataProvider:
         self.http_error_count = 0
         self.reconnection_error_count = 0
         self.test_results = []
+        self.monitor = None
 
     def get_history(self):
         return self.history

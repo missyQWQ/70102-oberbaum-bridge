@@ -25,6 +25,7 @@ def main(mllp, pager, aki_model):
     warnings.filterwarnings('ignore', category=RuntimeWarning)
     http_pager = Pager(f"http://{pager}/page")
 
+    print(mllp)
     ip_address, port_str = mllp.split(":")
     # Convert port string to integer
     port_number = int(port_str)

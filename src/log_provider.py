@@ -1,4 +1,10 @@
 import logging
+import os
+
+if not os.path.exists("/state"):
+    os.makedirs("/state")
+    open("/state/app.log", 'x')
+
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
