@@ -79,7 +79,7 @@ def parse_hl7message(record, state):
         formatted_datetime = datetime.strptime(datetime_str, '%Y%m%d%H%M%S').strftime('%Y-%m-%d %H:%M:%S')
 
         admitted_patient = state.get_admitted_patient()
-
+        admitted_patient[pid_record[-1]]
         return {int(pid_record[-1]): [admitted_patient[pid_record[-1]][0], admitted_patient[pid_record[-1]][1],
                                       formatted_datetime, round(float(obx_record[-1]), 2)]}
 
