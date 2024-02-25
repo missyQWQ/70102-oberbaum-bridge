@@ -25,7 +25,7 @@ log_flag_send_message = True
 log_flag_serve_mllp_dataloader = True
 log_flag_run_mllp_client = True
 log_flag_parse_mllp_messages = True
-
+log_flag_start_client = True
 
 async def send_message(pager, message, state):
     global log_flag_send_message
@@ -140,15 +140,19 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
 
 def run_mllp_client(host, port, aki_model, http_pager, state):
     global log_flag_run_mllp_client
+    global log_flag_start_client
     while True:
         try:
             # Create a socket object using IPv4 and TCP protocol
             s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             s.connect((host, port))
-            get_logger(__name__).info(f"Successfully connected to {host}:{port}")
-            print(f"Successfully connected to {host}:{port}")
+            if log_flag_start_client:
+                get_logger(__name__).info(f"Successfully connected to {host}:{port}")
+                log_flag_start_client = False
+            # print(f"Successfully connected to {host}:{port}")
             serve_mllp_dataloader(s, aki_model, http_pager, state)
             log_flag_run_mllp_client = True
+            log_flag_start_client = True
         except Exception as e:
             reconnection_detection.inc()
             state.set_reconnection_error_count()
