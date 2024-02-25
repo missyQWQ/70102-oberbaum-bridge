@@ -59,8 +59,16 @@ def signal_handler(sig, frame):
     print(f"Data loaded!!!!!!!")"""
 
 if __name__ == "__main__":
-    signal.signal(signal.SIGTERM, signal_handler)
-    signal.signal(signal.SIGINT, signal_handler)
+    # signal.signal(signal.SIGTERM, signal_handler)
+    # signal.signal(signal.SIGINT, signal_handler)
+    for i in [x for x in dir(signal) if x.startswith("SIG") and "_" not in x]:
+        try:
+            signum = getattr(signal, i)
+            # SIGKILL 和 SIGSTOP 不能被捕获或忽略
+            if signum not in (signal.SIGKILL, signal.SIGSTOP):
+                signal.signal(signum, signal_handler)
+        except (AttributeError, ValueError):
+            pass
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--history", default="history.csv", help="History Creatine Record to be used for predictions")
