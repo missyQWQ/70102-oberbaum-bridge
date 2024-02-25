@@ -117,7 +117,7 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
                 tests_received.inc()
                 state.set_test_count()
                 raw = data_combination_dfAndDict(state.get_history(), result)
-                if not math.isnan(raw.iloc[0]['creatinine_result_0']):
+                if not pd.isna(value[0]) and not math.isnan(raw.iloc[0]['creatinine_result_0']):
                     feature = preprocess_features(raw)
                     MRN, aki_result, nhs_result = aki_model.run_ensemble_model(feature)
                     state.set_confusion_matrix(aki_result[0], nhs_result[0])
