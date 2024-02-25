@@ -36,9 +36,8 @@ spec:
         - name: PAGER_ADDRESS
           value: oberbaum-simulator.coursework5:8441
         ports:
-          - name: metrics
+          - name: http
             containerPort: 8000
-            protocol: TCP
         volumeMounts:
           - mountPath: "/hospital-history"
             name: hospital-history
