@@ -6,7 +6,7 @@ if not os.path.exists("/state"):
     open("/state/app.log", 'x')
 
 
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                     datefmt='%m/%d/%Y %H:%M:%S',
                     filename='/state/app.log',
