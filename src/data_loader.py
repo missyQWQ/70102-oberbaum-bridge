@@ -60,6 +60,7 @@ async def send_message(pager, message, state):
 
 def parse_hl7message(record, state):
     further_record = record.split('\r')
+    print(f"incoming message: {further_record}")
     if len(further_record) == 3:
         if further_record[0].split('|')[8] == 'ADT^A01':
             pid_record = further_record[1].split('|')
