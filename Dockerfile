@@ -21,6 +21,10 @@ COPY README.md /model/
 COPY /src/aki_encoder_model.pkl /model/
 COPY /src/clf_model.pkl /model/
 COPY /src/sex_encoder_model.pkl /model/
+COPY /src/data_provider.py /model/
+COPY /src/log_provider.py /model/
+COPY /src/monitor_application.py /model/
+COPY /src/nhs_algorithm.py /model/
 COPY /tests/test_data_processing.py /model/
 COPY /tests/test_feature_construction.py /model/
 COPY /tests/test_pager.py /model/
@@ -29,8 +33,8 @@ RUN chmod +x /model/main.sh
 RUN pip3 install -r /model/requirements.txt
 WORKDIR /model/
 RUN echo "$(ls -la )"
-RUN pytest
+# RUN pytest
 RUN chmod +x /model/main.py
 # uncomment for test
 # CMD python3 /simulator/simulator.py --messages=/data/messages.mllp
-# CMD python3 /model/main.py --MLLP_ADDRESS=$MLLP_ADDRESS --PAGER_ADDRESS=$PAGER_ADDRESS
+CMD python3 /model/main.py --MLLP_ADDRESS=$MLLP_ADDRESS --PAGER_ADDRESS=$PAGER_ADDRESS

@@ -2,7 +2,7 @@ import aiohttp
 import asyncio
 from datetime import datetime
 from monitor_application import pages_sent, http_error_received
-from src.log_provider import get_logger
+from log_provider import get_logger
 
 
 async def run_http_pager(pager):
