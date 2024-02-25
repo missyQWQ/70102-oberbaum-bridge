@@ -37,9 +37,9 @@ spec:
         command: ["/model/main.sh"]
         env:
         - name: MLLP_ADDRESS
-          value: oberbaum-simulator.hospital:8440
+          value: oberbaum-simulator.coursework5:8440
         - name: PAGER_ADDRESS
-          value: oberbaum-simulator.hospital:8441
+          value: oberbaum-simulator.coursework5:8441
         ports:
           - name: metrics
             containerPort: 8440
@@ -54,7 +54,7 @@ spec:
             cpu: 1
       initContainers:
       - name: copy-hospital-history
-        image: imperialswemlsspring2024.azurecr.io/coursework4-history
+        image: imperialswemlsspring2024.azurecr.io/coursework5-history
         volumeMounts:
           - mountPath: "/hospital-history"
             name: hospital-history
