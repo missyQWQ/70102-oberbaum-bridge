@@ -37,4 +37,4 @@ RUN echo "$(ls -la )"
 RUN chmod +x /model/main.py
 # uncomment for test
 # CMD python3 /simulator/simulator.py --messages=/data/messages.mllp
-CMD python3 /model/main.py --MLLP_ADDRESS=$MLLP_ADDRESS --PAGER_ADDRESS=$PAGER_ADDRESS
+CMD /model/main.sh
