@@ -63,7 +63,7 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGQUIT, signal_handler)
     signal.signal(signal.SIGABRT, signal_handler)
-    signal.signal(signal.SIGSTOP, signal_handler)
+    # signal.signal(signal.SIGSTOP, signal_handler)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--history", default="history.csv", help="History Creatine Record to be used for predictions")

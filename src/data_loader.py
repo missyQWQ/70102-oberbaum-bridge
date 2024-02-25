@@ -3,7 +3,7 @@ import time
 from datetime import datetime
 
 import pandas as pd
-
+import pickle
 from pager import *
 from data_processing import data_combination_dfAndDict
 from model_feature_construction import preprocess_features
@@ -127,6 +127,8 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
                             time = result[int(MRN)][2]
                             asyncio.run(send_message(http_pager, (MRN, time, aki_result[0]), state))
                             state.set_paged_patient(MRN)
+                            with open('/state/state.pkl', 'wb') as file:
+                                pickle.dump(state, file)
                     else:
                         state.set_negative_detect()
 
