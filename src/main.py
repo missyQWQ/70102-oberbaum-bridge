@@ -47,7 +47,7 @@ def save_variables(filename):
 
 
 def signal_handler(sig, frame):
-    get_logger(__name__).critical(f'{sig} received, dump state')
+    get_logger(__name__).critical(f'shutdown {sig} received, dump state')
     print(f'{sig} received, graceful shutdown!!!!!!!!!!!')
     save_variables('/state/state.pkl')
     sys.exit(0)
@@ -63,7 +63,6 @@ if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGQUIT, signal_handler)
     signal.signal(signal.SIGABRT, signal_handler)
-    # signal.signal(signal.SIGSTOP, signal_handler)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--history", default="history.csv", help="History Creatine Record to be used for predictions")
