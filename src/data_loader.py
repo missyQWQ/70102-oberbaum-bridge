@@ -60,7 +60,7 @@ async def send_message(pager, message, state):
 
 def parse_hl7message(record, state):
     further_record = record.split('\r')
-    print(f"incoming message: {further_record}")
+    #print(f"incoming message: {further_record}")
     if len(further_record) == 3:
         if further_record[0].split('|')[8] == 'ADT^A01':
             pid_record = further_record[1].split('|')
@@ -110,6 +110,8 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
             messages_received.inc()
             state.set_message_count()
             if result is not None:
+                with open('/state/state.pkl', 'wb') as file:
+                    pickle.dump(state, file)
                 values = list(result.values())
                 value = values[0]
                 if len(value) == 4:
@@ -128,8 +130,6 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
                             time = result[int(MRN)][2]
                             asyncio.run(send_message(http_pager, (MRN, time, aki_result[0]), state))
                             state.set_paged_patient(MRN)
-                            with open('/state/state.pkl', 'wb') as file:
-                                pickle.dump(state, file)
                     else:
                         state.set_negative_detect()
 
