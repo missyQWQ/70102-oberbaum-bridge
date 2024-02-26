@@ -90,6 +90,19 @@ def parse_hl7message(record, state):
                                       formatted_datetime, round(float(obx_record[-1]), 2)]}
 
 
+def count_confusion_matrix(aki_prediction, nhs_prediction):
+    if nhs_prediction == 'y':
+        if aki_prediction == 'y':
+            tp.inc()
+        else:
+            fp.inc()
+    else:
+        if aki_prediction == 'y':
+            fn.inc()
+        else:
+            tn.inc()
+
+
 def serve_mllp_dataloader(client, aki_model, http_pager, state):
     global log_flag_serve_mllp_dataloader
     buffer = b""
@@ -122,7 +135,7 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
                 if not pd.isna(value[0]) and not math.isnan(raw.iloc[0]['creatinine_result_0']):
                     feature = preprocess_features(raw)
                     MRN, aki_result, nhs_result = aki_model.run_ensemble_model(feature)
-                    state.set_confusion_matrix(aki_result[0], nhs_result[0])
+                    count_confusion_matrix(aki_result, nhs_result)
                     if aki_result[0] == 'y':
                         positive_detection.inc()
                         state.set_positive_detect()
@@ -131,6 +144,7 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
                             asyncio.run(send_message(http_pager, (MRN, time, aki_result[0]), state))
                             state.set_paged_patient(MRN)
                     else:
+                        negative_detection.inc()
                         state.set_negative_detect()
 
             mllp = bytes(chr(MLLP_START_OF_BLOCK), "ascii")

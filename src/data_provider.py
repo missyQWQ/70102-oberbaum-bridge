@@ -2,7 +2,6 @@ import os
 import pandas as pd
 import numpy as np
 
-
 class DataProvider:
     def __init__(self):
         self.history = None
@@ -13,7 +12,6 @@ class DataProvider:
         self.positive_detect = 0
         self.negative_detect = 0
         self.request_count = 0
-        self.confusion_matrix = {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0}
         self.message_count = 0
         self.test_count = 0
         self.http_error_count = 0
@@ -60,24 +58,6 @@ class DataProvider:
         else:
             self.request_count = 0
             self.request_count += 1
-
-    def get_confusion_matrix(self):
-        return self.confusion_matrix
-
-    def set_confusion_matrix(self, aki_prediction, nhs_prediction):
-        if self.request_count == 1:
-            self.confusion_matrix = {'TP': 0, 'FP': 0, 'TN': 0, 'FN': 0}
-
-        if nhs_prediction == 'y':
-            if aki_prediction == 'y':
-                self.confusion_matrix['TP'] += 1
-            else:
-                self.confusion_matrix['FP'] += 1
-        else:
-            if aki_prediction == 'y':
-                self.confusion_matrix['FN'] += 1
-            else:
-                self.confusion_matrix['TN'] += 1
 
     def get_message_count(self):
         return self.message_count

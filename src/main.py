@@ -35,21 +35,9 @@ def main(mllp, pager, aki_model):
     run_mllp_client(ip_address, port_number, aki_model, http_pager, state_data)
 
 
-def save_variables(filename):
-    with open(filename, 'wb') as file:
-        pickle.dump(state_data, file)
-
-
-# Reload requested data variable to file
-"""def load_variables(filename):
-    with open(filename, 'rb') as file:
-        return pickle.load(file)"""
-
-
 def signal_handler(sig, frame):
     get_logger(__name__).critical(f'shutdown {sig} received, dump state')
     print(f'{sig} received, graceful shutdown!!!!!!!!!!!')
-    save_variables('/state/state.pkl')
     sys.exit(0)
 
 
