@@ -32,6 +32,14 @@ log_flag_parse_mllp_messages = True
 log_flag_start_client = True
 
 
+"""
+send message to pager system.
+
+Parameters:
+pager: http system sending to pager system
+message: message to send
+state: state of the information in this application like admitted patients and paged patients
+"""
 async def send_message(pager, message, state):
     global log_flag_send_message
     while True:
@@ -57,10 +65,26 @@ async def send_message(pager, message, state):
                 log_flag_send_message = False
             break
 
+"""
+Parse hl7 message
 
+Parameters:
+record: record of pateints and tests in hl7 format
+state: state of the information in this application like admitted patients and paged patients
+
+Return:
+admitted_patient = {
+    PID:[MRN, DOB, GENDER]
+}
+
+discharged_patient = None
+
+creatine_results = {
+    PID:[AGE, SEX, TEST_DATE, RESULT]
+}
+"""
 def parse_hl7message(record, state):
     further_record = record.split('\r')
-    #print(f"incoming message: {further_record}")
     if len(further_record) == 3:
         if further_record[0].split('|')[8] == 'ADT^A01':
             pid_record = further_record[1].split('|')
@@ -89,7 +113,9 @@ def parse_hl7message(record, state):
         return {int(pid_record[-1]): [admitted_patient[pid_record[-1]][0], admitted_patient[pid_record[-1]][1],
                                       formatted_datetime, round(float(obx_record[-1]), 2)]}
 
-
+"""
+make confusion matrix between our aki prediction and nhs prediction for monitoring
+"""
 def count_confusion_matrix(aki_prediction, nhs_prediction):
     if nhs_prediction == 'y':
         if aki_prediction == 'y':
@@ -102,7 +128,18 @@ def count_confusion_matrix(aki_prediction, nhs_prediction):
         else:
             tn.inc()
 
+"""
+Receive hl7 message through MLLP connections.
+If we receive a test result, we will predict
+the postivie test and send it to pager system
+if this patient doesn't been in pager system yet.
 
+Parameters:
+client: TCP channel to hospital 
+aki_model: our prediction model
+http_pager: http system connected with pager system
+state: state of the information in this application like admitted patients and paged patients
+"""
 def serve_mllp_dataloader(client, aki_model, http_pager, state):
     global log_flag_serve_mllp_dataloader
     buffer = b""
@@ -161,7 +198,16 @@ def serve_mllp_dataloader(client, aki_model, http_pager, state):
             break
     client.close()
 
+"""
+Try to connect our application with hospital via TCP
 
+Parameters:
+host: TCP address to connect to
+port: TCP port to connect to
+aki_model: our prediction model
+http_pager: http system connected with pager system
+state: state of the information in this application like admitted patients and paged patients
+"""
 def run_mllp_client(host, port, aki_model, http_pager, state):
     global log_flag_run_mllp_client
     global log_flag_start_client
@@ -186,7 +232,9 @@ def run_mllp_client(host, port, aki_model, http_pager, state):
                 print("fail to connect TCP->connect again")
             continue
 
-
+"""
+parse mllp message from TCP
+"""
 def parse_mllp_messages(buffer):
     global log_flag_parse_mllp_messages
     i = 0

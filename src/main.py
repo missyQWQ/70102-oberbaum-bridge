@@ -40,12 +40,6 @@ def signal_handler(sig, frame):
     print(f'{sig} received, graceful shutdown!!!!!!!!!!!')
     sys.exit(0)
 
-
-"""def load_state():
-    global data_provider
-    data_provider = load_variables('/state/state.pkl')
-    print(f"Data loaded!!!!!!!")"""
-
 if __name__ == "__main__":
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
@@ -69,6 +63,10 @@ if __name__ == "__main__":
 
     flags = parser.parse_args()
 
+    """
+    Restore state information if we saved state
+    Else, create a new state
+    """
     if os.path.exists('/state/state.pkl'):
         get_logger(__name__).critical('Try to recover from previous state!!!')
         print("Loading state....")
@@ -84,6 +82,9 @@ if __name__ == "__main__":
     sex_encoder = None
     aki_encoder = None
     clf_model = None
+    """
+    Import our model
+    """
     with open(flags.sex_encoder, "rb") as file:
         sex_encoder = pickle.load(file)
     with open(flags.aki_encoder, "rb") as file:
