@@ -89,13 +89,9 @@ if __name__ == "__main__":
     """
     Import our model
     """
-    with open(flags.sex_encoder, "rb") as file:
-        sex_encoder = pickle.load(file)
-    with open(flags.aki_encoder, "rb") as file:
-        aki_encoder = pickle.load(file)
     with open(flags.clf_model, "rb") as file:
         clf_model = pickle.load(file)
     print("Cached, Ready to run server")
-    aki_model = EnsembleModel(sex_encoder, aki_encoder, clf_model)
+    aki_model = EnsembleModel(clf_model)
     get_logger(__name__).info("Cached, Ready to run server")
     main(flags.MLLP_ADDRESS, flags.PAGER_ADDRESS, aki_model)

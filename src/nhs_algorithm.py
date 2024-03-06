@@ -1,10 +1,7 @@
 """ Script to run the NHS algorithm as per https://www.england.nhs.uk/akiprogramme/aki-algorithm/ """
 import numpy as np
 import pandas as pd
-import logging
-
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-
+from log_provider import get_logger
 
 def previous_result_mask(df):
     """
@@ -21,14 +18,14 @@ def previous_result_mask(df):
     """
     required_columns = ['RV1', 'RV2']
     if not all(column in df.columns for column in required_columns):
-        logging.error("DataFrame is missing one or more required columns for previous_result_mask: 'RV1', 'RV2'")
+        get_logger(__name__).error("DataFrame is missing one or more required columns for previous_result_mask: 'RV1', 'RV2'")
         raise ValueError("Input DataFrame does not have the required columns: 'RV1', 'RV2'")
 
     try:
         data_missing = df[required_columns].isnull().all(axis=1)
         return ~data_missing
     except Exception as e:
-        logging.error(f"Error in previous_result_mask: {e}")
+        get_logger(__name__).error(f"Error in previous_result_mask: {e}")
         raise
 
 
@@ -54,10 +51,10 @@ def RV_ratio_mask(df):
         RV_ratio['RV_ratio_over_threshold'] = RV_ratio['higher_RV_ratio'] > 1.5
         return pd.Series(RV_ratio['RV_ratio_over_threshold'])
     except AssertionError as error:
-        logging.error(f"AssertionError: {error}")
+        get_logger(__name__).error(f"AssertionError: {error}")
         raise ValueError("Input DataFrame is missing one or more of the required columns: 'C1_result', 'RV1', 'RV2'")
     except Exception as e:
-        logging.error(f"Unexpected error in RV_ratio_mask: {e}")
+        get_logger(__name__).error(f"Unexpected error in RV_ratio_mask: {e}")
         raise
 
 
@@ -76,7 +73,7 @@ def D_above_26_mask(df):
         ValueError: If the 'D' column is missing from the DataFrame or if it contains non-numeric values which cannot be compared.
     """
     if 'D' not in df.columns:
-        logging.error("'D' column is missing from the DataFrame in D_above_26_mask function.")
+        get_logger(__name__).error("'D' column is missing from the DataFrame in D_above_26_mask function.")
         raise ValueError("Input DataFrame does not have the required column: 'D'")
 
     try:
@@ -84,10 +81,10 @@ def D_above_26_mask(df):
         mask = pd.to_numeric(df['D'], errors='raise') > 26
         return mask
     except ValueError as e:
-        logging.error(f"Error converting 'D' column to numeric values in D_above_26_mask: {e}")
+        get_logger(__name__).error(f"Error converting 'D' column to numeric values in D_above_26_mask: {e}")
         raise ValueError(f"Error in D_above_26_mask due to non-numeric values in 'D' column: {e}")
     except Exception as e:
-        logging.error(f"Unexpected error in D_above_26_mask: {e}")
+        get_logger(__name__).error(f"Unexpected error in D_above_26_mask: {e}")
         raise
     
 
@@ -111,7 +108,7 @@ def hit_RV_ratio_threshold(df):
     required_columns = ['previous_result_available', 'RV_ratio_threshold_exceeded']
     missing_columns = [col for col in required_columns if col not in df.columns]
     if missing_columns:
-        logging.error(f"DataFrame is missing required columns for hit_RV_ratio_threshold: {', '.join(missing_columns)}")
+        get_logger(__name__).error(f"DataFrame is missing required columns for hit_RV_ratio_threshold: {', '.join(missing_columns)}")
         raise ValueError(f"Input DataFrame does not have the required columns: {', '.join(missing_columns)}")
 
     try:
@@ -122,7 +119,7 @@ def hit_RV_ratio_threshold(df):
         )
         return RV_ratio_test
     except Exception as e:
-        logging.error(f"Error in hit_RV_ratio_threshold: {e}")
+        get_logger(__name__).error(f"Error in hit_RV_ratio_threshold: {e}")
         raise
 
 
@@ -146,7 +143,7 @@ def hit_D_threshold(df):
     required_columns = ['previous_result_available', 'D_above_threshold']
     missing_columns = [col for col in required_columns if col not in df.columns]
     if missing_columns:
-        logging.error(f"DataFrame is missing required columns for hit_D_threshold: {', '.join(missing_columns)}")
+        get_logger(__name__).error(f"DataFrame is missing required columns for hit_D_threshold: {', '.join(missing_columns)}")
         raise ValueError(f"Input DataFrame does not have the required columns: {', '.join(missing_columns)}")
 
     try:
@@ -157,7 +154,7 @@ def hit_D_threshold(df):
         )
         return D_threshold_test
     except Exception as e:
-        logging.error(f"Error in hit_D_threshold: {e}")
+        get_logger(__name__).error(f"Error in hit_D_threshold: {e}")
         raise
     
 
@@ -181,7 +178,7 @@ def raise_aki_alert(df):
     required_columns = ['RV_threshold_breached', 'D_threshold_breached']
     missing_columns = [col for col in required_columns if col not in df.columns]
     if missing_columns:
-        logging.error(f"DataFrame is missing required columns for raise_aki_alert: {', '.join(missing_columns)}")
+        get_logger(__name__).error(f"DataFrame is missing required columns for raise_aki_alert: {', '.join(missing_columns)}")
         raise ValueError(f"Input DataFrame does not have the required columns: {', '.join(missing_columns)}")
 
     try:
@@ -191,7 +188,7 @@ def raise_aki_alert(df):
         )
         return alert_criteria_met
     except Exception as e:
-        logging.error(f"Error in raise_aki_alert: {e}")
+        get_logger(__name__).error(f"Error in raise_aki_alert: {e}")
         raise
 
 
@@ -219,18 +216,18 @@ def run_nhs_algorithm(df):
         missing_columns = [col for col in required_columns if col not in df.columns]
         if missing_columns:
             error_msg = f"Input DataFrame is missing required columns for running NHS algorithm: {', '.join(missing_columns)}"
-            logging.error(error_msg)
+            get_logger(__name__).error(error_msg)
             raise ValueError(error_msg)
 
-        logging.info("Starting NHS algorithm...")
+        # get_logger(__name__).info("Starting NHS algorithm...")
         df['previous_result_available'] = previous_result_mask(df)
         df['RV_ratio_threshold_exceeded'] = RV_ratio_mask(df)
         df['D_above_threshold'] = D_above_26_mask(df)
         df['RV_threshold_breached'] = hit_RV_ratio_threshold(df)
         df['D_threshold_breached'] = hit_D_threshold(df)
         result = np.where(raise_aki_alert(df), 'y', 'n')
-        logging.info("NHS algorithm completed successfully.")
+        # get_logger(__name__).info("NHS algorithm completed successfully.")
         return result
     except Exception as e:
-        logging.error(f"Error running NHS algorithm: {e}")
+        get_logger(__name__).error(f"Error running NHS algorithm: {e}")
         raise

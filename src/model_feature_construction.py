@@ -1,6 +1,6 @@
 import numpy as np
 import pandas as pd
-import logging
+from log_provider import get_logger
 
 """
 Purpose of script: To transform input of the form 
@@ -19,7 +19,6 @@ MRN|age|sex|C1_result|RV1|RV2|D |
 
 """ Step 1: Make sure the raw data is of the correct type """
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 # Dates
 def format_date_cols(data):
@@ -30,7 +29,7 @@ def format_date_cols(data):
             data[date_col] = pd.to_datetime(data[date_col], format='%Y-%m-%d %H:%M:%S')
         return True
     except ValueError as e:
-        logging.error(f"Date formatting error in column {date_col}: {e}")
+        get_logger(__name__).error(f"Date formatting error in column {date_col}: {e}")
         return False
 
 # Numerical results
@@ -42,7 +41,7 @@ def format_result_cols(data):
             data[result_col] = pd.to_numeric(data[result_col], errors='raise')
         return True
     except ValueError as e:
-        logging.error(f"Numeric formatting error in column {result_col}: {e}")
+        get_logger(__name__).error(f"Numeric formatting error in column {result_col}: {e}")
         return False
 
 # Patient information
@@ -54,17 +53,17 @@ def format_other_cols(data):
         data['sex'] = data['sex'].astype('string')
         return True
     except ValueError as e:
-        logging.error(f"Error formatting patient information: {e}")
+        get_logger(__name__).error(f"Error formatting patient information: {e}")
         return False
 
 def format_col_types(data):
     """Wrapper function to call all column type casting/formatting"""
     if not format_date_cols(data):
-        logging.info("Dates couldn't be formatted correctly - check raw data")
+        get_logger(__name__).error("Dates couldn't be formatted correctly - check raw data")
     if not format_result_cols(data):
-        logging.info("Results couldn't be formatted into numeric - check raw data")
+        get_logger(__name__).error("Results couldn't be formatted into numeric - check raw data")
     if not format_other_cols(data):
-        logging.info("Patient information failed to be formatted - check raw data")
+        get_logger(__name__).error("Patient information failed to be formatted - check raw data")
 
 
 """ Step 2: Melt data into long format """        
@@ -105,10 +104,9 @@ def consolidate_tests(df):
                                       columns='variable',
                                       values='value',
                                       aggfunc='first').reset_index()
-        logging.info("Data reshaped successfully")
         return df_wide
     except Exception as e:
-        logging.error(f"Data reshaping failed: {e}")
+        get_logger(__name__).error(f"Data reshaping failed: {e}")
         raise ValueError(f"Data reshaping failed due to an error: {e}")
 
 
@@ -152,10 +150,10 @@ def get_time_masks(df):
 
         return within_7_days, within_48h, within_8_to_365_days
     except KeyError as e:
-        logging.error(f"KeyError - {e}")
+        get_logger(__name__).error(f"KeyError - {e}")
         raise ValueError(f"KeyError - {e}")
     except Exception as e:
-        logging.error(f"Failed to construct time masks due to an unexpected error: {e}")
+        get_logger(__name__).error(f"Failed to construct time masks due to an unexpected error: {e}")
         raise ValueError(f"Failed to construct time masks due to an unexpected error: {e}")
 
 
@@ -185,7 +183,7 @@ def get_nhs_features(df):
     """
     required_columns = ['mrn', 'date', 'result']
     if not all(column in df.columns for column in required_columns):
-        logging.error("DataFrame missing one or more required columns: 'mrn', 'date', 'result'")
+        get_logger(__name__).error("DataFrame missing one or more required columns: 'mrn', 'date', 'result'")
         raise ValueError("Input DataFrame does not have the required columns.")
 
     try:
@@ -205,10 +203,9 @@ def get_nhs_features(df):
 
         df['D'] = df['C1_result'] - df['lowest_48h']
 
-        logging.info("RV1, RV2, D successfully computed from test results")
         return df
     except Exception as e:
-        logging.error(f"Problem computing NHS metrics: {e}")
+        get_logger(__name__).error(f"Problem computing NHS metrics: {e}")
         raise
 
 
@@ -231,15 +228,14 @@ def get_summary_observations(df):
     
     if missing_cols:
         error_message = f"Input DataFrame is missing required columns: {', '.join(missing_cols)}"
-        logging.error(error_message)
+        get_logger(__name__).error(error_message)
         raise ValueError(error_message)
 
     try:
         summary_rows = df[col_subset].drop_duplicates().reset_index(drop=True)
-        logging.info("Summary observations successfully consolidated.")
         return summary_rows
     except Exception as e:
-        logging.error(f"Unable to consolidate features ahead of modelling: {e}")
+        get_logger(__name__).error(f"Unable to consolidate features ahead of modelling: {e}")
         raise
 
 
@@ -258,34 +254,28 @@ def preprocess_features(df_obj):
     Raises:
         Exception: Propagates any exceptions raised by the preprocessing steps.
     """
-    logging.info("Starting preprocessing of features.")
     try:
         format_col_types(df_obj)
-        logging.info("Column types formatted successfully.")
     except Exception as e:
-        logging.error(f"Error in formatting column types: {e}")
+        get_logger(__name__).error(f"Error in formatting column types: {e}")
         raise
 
     try:
         data = consolidate_tests(df_obj)
-        logging.info("Tests consolidated successfully.")
     except Exception as e:
-        logging.error(f"Error in consolidating tests: {e}")
+        get_logger(__name__).error(f"Error in consolidating tests: {e}")
         raise
 
     try:
         data = get_nhs_features(data)
-        logging.info("NHS features calculated successfully.")
     except Exception as e:
-        logging.error(f"Error in calculating NHS features: {e}")
+        get_logger(__name__).error(f"Error in calculating NHS features: {e}")
         raise
 
     try:
         data = get_summary_observations(data)
-        logging.info("Summary observations obtained successfully.")
     except Exception as e:
-        logging.error(f"Error in summarizing observations: {e}")
+        get_logger(__name__).error(f"Error in summarizing observations: {e}")
         raise
 
-    logging.info("Preprocessing completed successfully.")
     return data
