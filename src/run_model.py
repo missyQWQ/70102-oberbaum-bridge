@@ -1,72 +1,48 @@
 import pandas as pd
-from sklearn import preprocessing
-from sklearn.ensemble import HistGradientBoostingClassifier
 import nhs_algorithm as nhs
-from datetime import datetime
 
-class Model():
-    def __init__(self, sex_encoder, aki_encoder, clf_model):
-        self.sex_encoder = sex_encoder
-        self.aki_encoder = aki_encoder
+class Model:
+    def __init__(self, clf_model):
         self.clf_model = clf_model
 
     def run_model(self, data):
-        # Encode the sex
-        data['sex'] = self.sex_encoder.fit_transform(data['sex'])
+        # Directly encode the sex column. Assuming 'f' and 'm' are the possible values.
+        data['sex'] = data['sex'].map({'f': 1, 'm': 0})
 
-        # Make a prediction
-        X = data.drop(['mrn'], axis=1)
-        prediction = pd.Series(self.clf_model.predict(X.values))
+        # Prepare the data for prediction
+        X = data.drop(['mrn'], axis=1)  # Exclude 'mrn' column from features
+        predictions = self.clf_model.predict(X.values)
 
-        # Encode aki prediction
-        aki_result = str(self.aki_encoder.inverse_transform(prediction))
+        # As AKI encoding is binary (0 or 1) and direct interpretation is sufficient
+        aki_result = ['n' if pred == 0 else 'y' for pred in predictions]
         MRN = int(data.iloc[0, 0])
 
-        # Return the tuple of (MRN, prediction)
-        return (MRN, aki_result)
+        # Return a tuple of (MRN, prediction)
+        return MRN, aki_result
 
 
-def run_model(data, model, sex_encoder, aki_encoder):
-    """ Runs the gradient boosting model to predict AKI -- pretrained """
-    # Encode the sex
-    data['sex'] = sex_encoder.fit_transform(data['sex'])
-
-    # Make a prediction
-    X = data.drop(['mrn'], axis=1)
-    prediction = pd.Series(model.predict(X.values))
-
-    # Encode aki prediction
-    aki_result = str(aki_encoder.inverse_transform(prediction))
-    MRN = int(data.iloc[0, 0])
-
-    # Return the tuple of (MRN, prediction)
-    return (MRN, aki_result)
-
-class EnsembleModel():
-    """ So we can return both our gradient boost classifier and the NHS algo outcome"""
-    def __init__(self, sex_encoder, aki_encoder, clf_model):
-        self.sex_encoder = sex_encoder
-        self.aki_encoder = aki_encoder
-        self.clf_model = clf_model
+class EnsembleModel:
+    """Enables the combination of gradient boost classifier and NHS algorithm outcomes."""
     
+    def __init__(self, clf_model):
+        self.clf_model = clf_model
+
     def run_ensemble_model(self, data):
-        # Encode the sex
-        data['sex'] = self.sex_encoder.fit_transform(data['sex'])
-
-        # Make a prediction
-        X = data.drop(['mrn'], axis=1)
-        prediction = pd.Series(self.clf_model.predict(X.values))
-
-        # Encode aki prediction
-        aki_result = self.aki_encoder.inverse_transform(prediction)
+        # Directly encode the sex column.
+        data['sex'] = data['sex'].map({'f': 1, 'm': 0})
         
-        # Also get the prediction from the NHS algorithm
+        # Prepare the data and make prediction
+        X = data.drop(['mrn'], axis=1)
+        prediction = self.clf_model.predict(X.values)
+        aki_result = ['n' if pred == 0 else 'y' for pred in prediction]
+        
+        # Obtain the NHS algorithm prediction
         nhs_result = nhs.run_nhs_algorithm(data)
         
         MRN = int(data.iloc[0, 0])
 
-        # Return the tuple of (MRN, cls_prediction, nhs_prediction)
-        return (MRN, aki_result, nhs_result)
+        # Return a tuple of (MRN, cls_prediction, nhs_prediction)
+        return MRN, aki_result, nhs_result
         
 
 
