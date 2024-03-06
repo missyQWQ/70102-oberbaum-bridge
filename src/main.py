@@ -30,17 +30,21 @@ def main(mllp, pager, aki_model):
     # Convert port string to integer
     port_number = int(port_str)
     print('Promethus Client Starts')
+
+    # Start the Prometheus endpoint
     start_http_server(8000)
     print("Server started...")
     run_mllp_client(ip_address, port_number, aki_model, http_pager, state_data)
 
 
 def signal_handler(sig, frame):
+    # Record signal events
     get_logger(__name__).critical(f'shutdown {sig} received, dump state')
     print(f'{sig} received, graceful shutdown!!!!!!!!!!!')
     sys.exit(0)
 
 if __name__ == "__main__":
+    # Register signals to signal handlers.
     signal.signal(signal.SIGTERM, signal_handler)
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGQUIT, signal_handler)
