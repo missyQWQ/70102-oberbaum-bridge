@@ -1,8 +1,8 @@
 # 70102-Oberbaum-Bridge
 An Acute Kidney Injury (AKI) Prediction and Alert System.
 It's a university project from Imperial College London 2023/24 70102 Software Engineering for Machine Learning Systems.
-Supervisor: Andrew Eland
-Autoher: Michael-Hollins, Peter Wang, Yiyuan Wang, Yichun Zhang
+- Supervisor: Andrew Eland
+- Autoher: Michael-Hollins, Peter Wang, Yiyuan Wang, Yichun Zhang
 ## Introduction
 AKI prediction application will read MLLP message from hosptial and predict AKI test. 
 If the prediction is positive, we will send patient information to hosptial pager system via HTTP.
